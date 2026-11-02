@@ -1,0 +1,1380 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="WifiMi Demo">
+<meta name="theme-color" content="#F1F1F9">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>WifiMi 旅展 Demo</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+@font-face{font-family:'Noto Sans TC';font-weight:400;font-style:normal;font-display:block;src:url(fonts/NotoSansTC-400.woff2) format('woff2');}
+@font-face{font-family:'Noto Sans TC';font-weight:500;font-style:normal;font-display:block;src:url(fonts/NotoSansTC-500.woff2) format('woff2');}
+@font-face{font-family:'Noto Sans TC';font-weight:600;font-style:normal;font-display:block;src:url(fonts/NotoSansTC-600.woff2) format('woff2');}
+@font-face{font-family:'Noto Sans TC';font-weight:700;font-style:normal;font-display:block;src:url(fonts/NotoSansTC-700.woff2) format('woff2');}
+@font-face{font-family:'Lato';font-weight:400;font-style:normal;font-display:block;src:url(fonts/Lato-400.woff2) format('woff2');}
+@font-face{font-family:'Lato';font-weight:700;font-style:normal;font-display:block;src:url(fonts/Lato-700.woff2) format('woff2');}
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+/* Layout: one 402pt-wide phone screen (iPhone 17 Pro). Full-bleed on phones, framed device on desktop. Tokens from the Figma file. */
+:root {
+  --purple-100: #F1F1F9; --purple-200: #EAEAF8; --purple-300: #BAB9E0; --purple-400: #8785DE;
+  --purple-500: #7473C0; --purple-800: #2E2E4D;
+  --yellow-100: #FFFAEE; --yellow-500: #FFCD50; --yellow-700: #997B30; --yellow-800: #4D3E18;
+  --green-100: #DCFADB; --green-500: #379F1C;
+  --gray-500: #A9A9A9; --gray-600: #9B9B9B; --gray-700: #757575;
+  --white: #FFFFFF; --black: #000000; --page: #E4E4EE;
+  --card-shadow: 0 4px 10px rgba(69,69,115,.06);
+  --font: "Lato", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+  --sb: 10px;
+  color-scheme: light;
+}
+html, body { height: 100%; margin: 0; }
+[hidden] { display: none !important; }
+body { background: var(--page); font-family: var(--font); color: var(--black); overflow: hidden;
+  -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+* { box-sizing: border-box; }
+p { margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+img { display: block; }
+
+#stage { position: fixed; top: 0; left: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: center; } /* height/offset follow the visible area when the iOS keyboard opens */
+#device { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--purple-100); }
+.statusbar { display: none; }
+@media (min-width: 700px) and (min-height: 600px) {
+  #device { width: 402px; height: 874px; flex: none; border-radius: 56px; transform-origin: center;
+    box-shadow: 0 0 0 10px #1d1d24, 0 0 0 12px #3a3a46, 0 30px 80px rgba(46,46,77,.35); }
+  #device { --sb: 62px; }
+  .statusbar { display: flex; position: absolute; z-index: 50; top: 0; left: 0; right: 0; height: 62px; padding-top: 3px;
+    align-items: center; pointer-events: none; }
+  .statusbar .time { flex: 1; text-align: center; padding-left: 10px; font: 600 17.67px/22px -apple-system, "SF Pro", system-ui, sans-serif; }
+  .statusbar .notch { width: 125px; height: 37px; }
+  .statusbar .levels { flex: 1; display: flex; gap: 8px; align-items: center; justify-content: center; padding-right: 10px; }
+  .cell { display: flex; gap: 2.333px; align-items: flex-end; }
+  .cell i { width: 3.333px; border-radius: 4px; background: #000; }
+}
+
+.screen { position: absolute; inset: 0; transition: transform .38s cubic-bezier(.32,.72,0,1), opacity .38s; }
+.screen.off-right { transform: translateX(100%); }
+.screen.off-left { transform: translateX(-28%); }
+
+/* ---------- Home ---------- */
+#home { background: var(--purple-100); }
+.home-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.home-scroll::-webkit-scrollbar { display: none; }
+.home-inner { position: relative; padding: var(--sb) 16px 107px; } /* last card sits 24px above the tab bar */
+.kv { position: absolute; left: 0; right: 0; top: calc(var(--sb) - 62px); height: 301px; overflow: hidden; pointer-events: none; }
+.kv-bg { position: absolute; inset: 0;
+  background-image: linear-gradient(119.08deg, #fff 4.92%, #E9E6FF 42.38%, #D8D3FF 61.55%, #A09EDC 88.07%, #7473C0 107.26%),
+    linear-gradient(117.62deg, rgba(116,115,192,0) 47.87%, rgba(116,115,192,.18) 103.13%),
+    linear-gradient(101.64deg, #F5F3FF .33%, #E9E6FF 54.74%, #D8D3FF 99.8%); }
+.kv-svg { position: absolute; top: 0; left: 50%; width: 402px; height: 301px; margin-left: -201px; }
+.abs { position: absolute; }
+.fill { position: absolute; inset: 0; width: 100%; height: 100%; }
+.m230 { -webkit-mask: url(assets/kv-mask.svg) no-repeat; mask: url(assets/kv-mask.svg) no-repeat;
+  -webkit-mask-size: 230px 230px; mask-size: 230px 230px; }
+.kv-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 145px; background: linear-gradient(180deg, rgba(255,255,255,0) 8.28%, var(--purple-100)); }
+.flexc { display: flex; align-items: center; justify-content: center; }
+
+.logo { position: relative; width: 123.521px; height: 22px; margin-top: 10px; }
+.headline { position: relative; margin-top: 12px; font: 600 22px/28px "Noto Sans TC", sans-serif; letter-spacing: .44px; color: var(--purple-800); }
+.col { position: relative; margin-top: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.ai-card { position: relative; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; text-align: left;
+  background: rgba(255,255,255,.55); -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: 1.25px 0 0 -.75px rgba(69,69,115,.1), -1.25px 0 0 -.75px rgba(69,69,115,.1), 0 0 5px .5px rgba(69,69,115,.08), 0 4px 20px rgba(69,69,115,.05); }
+.ai-card .top { display: flex; flex-direction: column; gap: 6px; }
+.ai-head { display: flex; gap: 2px; align-items: center; font-size: 14px; line-height: 22px; }
+.ai-head b { font: 700 14px/22px Lato, sans-serif; }
+.ai-head span { font: 600 14px/22px "Noto Sans TC", sans-serif; margin-left: 4px; }
+.ai-input { background: #fff; border-radius: 26px; padding: 7px 6px 8px 18px; color: var(--gray-600); font: 400 14px/22px "Noto Sans TC", sans-serif; }
+.chips { display: flex; gap: 8px; padding: 0 2px; overflow: hidden; }
+.chip { flex: none; background: var(--yellow-500); color: var(--yellow-800); border-radius: 16px; padding: 5px 12px; font-weight: 500; font-size: 13px; line-height: 1.3; white-space: nowrap; }
+
+.sec { display: flex; flex-direction: column; gap: 8px; }
+.sec-h { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; }
+.sec-h h2 { margin: 0; font: 600 18px/25px var(--font); color: var(--purple-800); }
+.link { display: flex; align-items: center; gap: 1px; color: var(--purple-500); font: 500 13px/1.3 "Noto Sans TC", sans-serif; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.dest { background: #fff; border-radius: 12px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; box-shadow: var(--card-shadow); text-align: left; }
+.badge { position: relative; width: 40px; height: 40px; flex: none; }
+.badge .ring { position: absolute; inset: -1px; width: 42px; height: 42px; }
+.badge .flag { position: absolute; inset: 0; -webkit-mask: url(assets/badge-mask.svg) no-repeat; mask: url(assets/badge-mask.svg) no-repeat;
+  -webkit-mask-size: 40px 40px; mask-size: 40px 40px; }
+.t14s { font: 600 14px/22px var(--font); color: var(--purple-800); }
+.t12 { font: 400 12px/18px var(--font); color: var(--gray-600); }
+
+.banner { position: relative; overflow: hidden; border-radius: 12px; padding: 14px 16px 20px; display: flex; flex-direction: column; gap: 19px; align-items: flex-start;
+  background: linear-gradient(134.11deg, #FFCD50 17.46%, #FFE59A 100%); }
+.tag { background: rgba(77,62,24,.17); color: #fff; border-radius: 12px; padding: 3px 8px 4px; font: 400 12px/18px "Noto Sans TC", sans-serif; }
+.btn-dark { position: relative; z-index: 1; display: flex; gap: 4px; align-items: center; background: var(--yellow-800); color: #fff; border-radius: 28px; padding: 6px 10px 8px 14px; font: 600 14px/22px "Noto Sans TC", sans-serif; }
+.dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+.dots i { height: 6px; width: 6px; border-radius: 3px; background: var(--purple-200); }
+.dots i.on { width: 18px; background: var(--purple-500); }
+
+.reason { background: #fff; border-radius: 12px; padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 4px 10px rgba(69,69,115,.06); min-width: 0; }
+.reason .top { display: flex; align-items: center; justify-content: space-between; }
+.reason .num { font: 700 28px/28px Lato, sans-serif; color: var(--purple-200); }
+.tile { flex: none; display: flex; align-items: center; justify-content: center; padding: 3px; border-radius: 10px; border: .7px solid rgba(255,255,255,.85);
+  background: linear-gradient(135deg, #F8F8FD 14.29%, #DFDFF2 85.71%); }
+.tile.s36 { width: 36px; height: 36px; } .tile.s40 { width: 40px; height: 40px; }
+.ico { position: relative; overflow: hidden; }
+.ico.s30 { width: 30px; height: 30px; } .ico.s34 { width: 34px; height: 34px; }
+.ico > div { position: absolute; }
+.ico > div > img, .ico > div > div > img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ico > div > div { position: absolute; }
+
+.panel { background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(69,69,115,.1); padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.steps { display: flex; flex-direction: column; gap: 16px; }
+.step { display: flex; gap: 10px; align-items: center; }
+.step > div:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.faq { display: flex; flex-direction: column; gap: 10px; }
+.faq-item { background: #fff; border-radius: 12px; padding: 12px 14px 14px; box-shadow: var(--card-shadow); width: 100%; text-align: left; }
+.faq-item.open { padding: 16px; filter: none; box-shadow: 0 4px 16px rgba(69,69,115,.1); }
+.faq-q { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.faq-q img { width: 20px; height: 20px; transition: transform .2s; }
+.faq-a { display: none; margin-top: 6px; font: 400 14px/22px "Noto Sans TC", sans-serif; color: var(--gray-600); }
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .faq-q img { transform: rotate(180deg); }
+
+.tabbar { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; padding: 16px 68px 25px; display: flex; justify-content: center; pointer-events: none; }
+.tabs { position: relative; flex: 1; max-width: 266px; display: flex; align-items: center; padding: 0 2px; pointer-events: auto; }
+.tabs::before { content: ""; position: absolute; inset: -4px; border-radius: 1000px;
+  background: rgba(247,247,250,.78); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+  box-shadow: 1.25px 0 0 -.75px #d0d0d0, -1.25px 0 0 -.75px #d0d0d0, 0 0 0 .5px #e8e8e8, 0 8px 15px rgba(0,0,0,.02); }
+.tab { position: relative; flex: 1; height: 54px; margin-right: -8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 400 10px/15px var(--font); }
+.tab:last-child { margin-right: 0; }
+.tab img { width: 24px; height: 24px; }
+.tab.on::before { content: ""; position: absolute; inset: 0 -2.33px 0 -2px; border-radius: 100px; background: #EDEDED; }
+.tab.on span { color: var(--purple-500); font-weight: 600; }
+.tab > * { position: relative; }
+
+/* ---------- Chat ---------- */
+#chat { background: var(--yellow-100); z-index: 2; }
+.chat-head { position: absolute; z-index: 3; top: 0; left: 0; right: 0; padding-top: var(--sb); background: rgba(255,255,255,.6);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.chat-head .bar { display: flex; gap: 10px; align-items: center; padding: 10px 16px; height: 48px; }
+.chat-head .title { flex: 1; display: flex; gap: 2px; align-items: center; justify-content: center; font: 600 18px/25px var(--font); }
+.chat-head .title img { width: 28px; height: 28px; }
+.icon24 { width: 24px; height: 24px; flex: none; }
+.chat-body { position: absolute; inset: 0; overflow-y: auto; padding: calc(var(--sb) + 48px + 16px) 16px 100px; overscroll-behavior: contain; }
+.chat-body::-webkit-scrollbar { display: none; }
+.intro { padding-top: 4px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
+.intro h1 { margin: 0; font: 600 18px/25px "Noto Sans TC", sans-serif; color: var(--yellow-800); }
+.intro p { font: 400 16px/24px var(--font); color: var(--yellow-700); }
+.msgs { display: flex; flex-direction: column; gap: 18px; }
+.u-row { display: flex; justify-content: flex-end; }
+.bubble { background: #fff; border-radius: 12px; padding: 6px 16px 8px; font: 400 16px/24px var(--font); box-shadow: var(--card-shadow); max-width: 100%; }
+.think { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.think .bubble { height: 36px; display: flex; align-items: center; filter: none; box-shadow: 0 4px 10px rgba(69,69,115,.06); }
+.think .ds { display: flex; gap: 6px; }
+.think .ds i { width: 5px; height: 5px; border-radius: 50%; background: var(--purple-300); animation: dot 1.1s infinite ease-in-out; }
+.think .ds i:nth-child(2) { animation-delay: .15s; } .think .ds i:nth-child(3) { animation-delay: .3s; } .think .ds i:nth-child(4) { animation-delay: .45s; }
+@keyframes dot { 0%, 60%, 100% { background: var(--purple-300); transform: translateY(0); } 30% { background: var(--purple-500); transform: translateY(-3px); } }
+.think p { font: 400 14px/22px var(--font); color: var(--gray-600); }
+.ai { display: flex; flex-direction: column; gap: 12px; }
+.ai-text { font: 400 16px/24px var(--font); min-height: 48px; }
+.pcard { background: #fff; border-radius: 12px; padding: 12px 16px 16px; display: flex; gap: 14px; align-items: center; box-shadow: var(--card-shadow); text-align: left; width: 100%; }
+.pcard .illu { width: 88px; height: 88px; flex: none; }
+.pcard .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.gtag { align-self: flex-start; background: var(--green-100); color: var(--green-500); border-radius: 4px; padding: 2px 6px 3px; font: 600 10px/15px "Noto Sans TC", sans-serif; }
+.pcard .name { font: 600 16px/24px var(--font); }
+.pcard .sub { font: 400 12px/18px var(--font); color: var(--gray-700); }
+.pcard .price { font: 700 18px/25px Lato, sans-serif; color: var(--purple-500); }
+.also-h { font: 600 16px/24px var(--font); }
+.also { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; } /* 12px gap + 8px = 20px below the main card */
+.also > div { display: flex; flex-direction: column; gap: 12px; }
+.rcard { background: #fff; border-radius: 12px; padding: 12px 16px 16px; display: flex; gap: 14px; align-items: center; box-shadow: var(--card-shadow); text-align: left; width: 100%; }
+.rcard img { width: 40px; height: 40px; flex: none; }
+.rcard .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.rcard .price { font: 700 16px/20px Lato, sans-serif; color: var(--purple-500); white-space: nowrap; }
+.rise { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.pcard:active, .rcard:active, .dest:active, .ai-card:active { transform: scale(.98); }
+
+.composer { position: absolute; z-index: 4; left: 16px; right: 16px; bottom: 24px; }
+.ibar { background: #fff; border-radius: 999px; height: 52px; padding: 6px 6px 6px 18px; display: flex; align-items: center; gap: 8px; box-shadow: var(--card-shadow); }
+.ibar input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: 400 16px/22px var(--font); color: #000; padding: 0; -webkit-user-select: text; user-select: text; }
+.ibar input::placeholder { color: var(--gray-500); font-size: 14px; }
+.ibar .hold { flex: 1; text-align: center; color: var(--gray-500); font: 400 14px/22px "Noto Sans TC", sans-serif; touch-action: none; align-self: stretch; display: flex; align-items: center; justify-content: center; }
+.mic { width: 40px; height: 40px; border-radius: 20px; background: var(--yellow-500); flex: none; display: flex; align-items: center; justify-content: center; }
+.mic img { width: 20px; height: 20px; }
+.mic:active { transform: scale(.92); }
+.voice-panel { background: #fff; border-radius: 16px; padding: 20px 0 24px; display: flex; flex-direction: column; gap: 16px; align-items: center; box-shadow: var(--card-shadow); }
+.voice-panel p { font: 400 14px/22px "Noto Sans TC", sans-serif; color: var(--gray-500); }
+.voice-panel.cancel p { color: #D9534F; }
+.wave { display: flex; gap: 5px; align-items: center; height: 38px; }
+.wave i { width: 4px; border-radius: 2px; background: var(--purple-400); animation: wv .9s ease-in-out infinite alternate; transform-origin: center; }
+.voice-panel.cancel .wave i { background: var(--gray-500); animation-play-state: paused; }
+@keyframes wv { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+
+/* ---------- Plan / checkout / success ---------- */
+.page { background: var(--purple-100); z-index: 3; }
+.page .scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 24px; }
+#planScroll { padding-bottom: 163px; } #coScroll { padding-bottom: 160px; } #success .scroll { padding-bottom: 126px; } /* bottom bar height + 24px */
+.page .scroll::-webkit-scrollbar { display: none; }
+.glass { background: rgba(255,255,255,.55); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 1.25px 0 0 -.75px #d0d0d0, -1.25px 0 0 -.75px #d0d0d0, 0 0 0 .5px #e8e8e8, 0 8px 15px rgba(0,0,0,.02); }
+.plan-hero { position: relative; height: calc(138px + var(--sb)); }
+.plan-hero .bg { position: absolute; left: 0; right: 0; top: calc(var(--sb) - 62px); height: 200px; overflow: hidden; }
+.plan-hero .bg img { position: absolute; left: 50%; width: 402px; height: 200px; margin-left: -201px; }
+.back-btn { position: absolute; left: 12px; top: var(--sb); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.back-btn img { width: 24px; height: 24px; margin-left: -2px; }
+.dest-title { position: absolute; left: 68px; top: calc(var(--sb) + 7px); display: flex; gap: 6px; align-items: flex-start; color: #fff; font: 600 22px/28px "Noto Sans TC", sans-serif; letter-spacing: .44px; }
+.b30 { position: relative; width: 30px; height: 30px; }
+.b30 .ring { position: absolute; inset: -1px; width: 32px; height: 32px; }
+.b30 .flag { position: absolute; inset: 0; -webkit-mask: url(assets/badge30-mask.svg) no-repeat center / 100% 100%; mask: url(assets/badge30-mask.svg) no-repeat center / 100% 100%; }
+.type-pill { position: absolute; right: 16px; top: var(--sb); height: 40px; border-radius: 1000px; padding: 0 8px 0 12px; display: flex; gap: 3px; align-items: center; font: 600 16px/24px var(--font); }
+.type-pill img { width: 24px; height: 24px; transform: rotate(90deg); transition: transform .2s; }
+.type-pill[aria-expanded="true"] img { transform: rotate(-90deg); }
+.type-menu { position: absolute; z-index: 6; right: 16px; top: calc(var(--sb) + 46px); background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 8px 24px rgba(46,46,77,.16); display: flex; flex-direction: column; min-width: 132px; }
+.type-menu button { text-align: left; padding: 10px 12px; border-radius: 8px; font: 500 15px/22px var(--font); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.type-menu button.on { background: var(--purple-100); color: var(--purple-500); font-weight: 600; }
+.type-menu small { color: var(--gray-600); font-size: 12px; font-weight: 400; }
+.compat { position: absolute; left: 16px; right: 16px; top: calc(var(--sb) + 82px); height: 40px; border-radius: 1000px; padding-left: 16px; display: flex; align-items: center; gap: 8px; font: 600 14px/22px var(--font); color: var(--purple-800); }
+.verify { width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
+.verify img { width: 11.111px; height: 11.111px; }
+.verify.ok { background: var(--green-500); } .verify.no { background: #E5484D; }
+.spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--purple-300); border-top-color: var(--purple-500); animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pop { animation: pop .35s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.plan-body { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 24px; }
+.grp { display: flex; flex-direction: column; gap: 10px; }
+.lbl { font: 400 14px/22px var(--font); color: var(--gray-700); }
+.days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.days button { box-shadow: var(--card-shadow); }
+.days button { background: #fff; border-radius: 6px; padding: 7px 0 8px; font: 400 14px/22px var(--font); transition: background .15s; }
+.days button.on { background: #8C8BE3; color: #fff; font-weight: 600; }
+.plans { display: flex; flex-direction: column; gap: 12px; }
+.plans .plan { box-shadow: var(--card-shadow); }
+.plan { background: #fff; border-radius: 12px; border: 2px solid transparent; padding: 8px 14px; display: flex; gap: 10px; align-items: center; text-align: left; width: 100%; transition: border-color .15s; }
+.plan.on { border-color: var(--purple-400); }
+.radio { width: 18px; height: 18px; flex: none; border-radius: 50%; border: 1.688px solid #D2D4D5; position: relative; }
+.on > .radio { border: 0; }
+.on > .radio::after { content: ""; position: absolute; inset: 0; background: url(assets/radio-on.svg) center / 100% 100% no-repeat; }
+.plan .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.plan .nm { display: flex; gap: 6px; align-items: center; font: 600 16px/24px var(--font); }
+.ptag { border-radius: 4px; padding: 1px 5px 2px; font: 600 12px/18px "Noto Sans TC", sans-serif; }
+.ptag.best { background: var(--green-100); color: var(--green-500); }
+.ptag.pop { background: #FFEFDD; color: #F29844; }
+.plan .ds { font: 400 12px/18px var(--font); color: var(--gray-600); }
+.plan .pr { font: 700 16px/20px Lato, sans-serif; white-space: nowrap; }
+.detail { background: #fff; border-radius: 12px; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 20px; box-shadow: var(--card-shadow); }
+.caps { display: flex; justify-content: space-between; }
+.caps div { width: 64px; display: flex; flex-direction: column; gap: 2px; align-items: center; font: 400 14px/22px var(--font); white-space: nowrap; }
+.caps img { width: 24px; height: 24px; }
+.feats { display: flex; flex-direction: column; gap: 12px; }
+.feat { display: flex; gap: 6px; align-items: center; font: 400 14px/22px var(--font); }
+.feat span { flex: 1; min-width: 0; }
+.feat img { width: 20px; height: 20px; flex: none; }
+.feats.muted .feat { color: var(--gray-600); }
+
+.bottombar { position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 16px 16px 36px; display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 -4px 10px rgba(69,69,115,.06); }
+.sum { display: flex; gap: 8px; align-items: center; }
+.sum b { flex: 1; font: 700 18px/25px Lato, sans-serif; color: var(--purple-800); }
+.sum span { font: 400 14px/22px var(--font); color: var(--gray-600); white-space: nowrap; }
+.btn-primary { width: 100%; background: var(--yellow-500); color: var(--purple-800); border-radius: 999px; padding: 12px 16px 14px; font: 600 16px/24px "Noto Sans TC", sans-serif; transition: opacity .2s, transform .1s; }
+.btn-primary:active { transform: scale(.98); }
+.btn-primary:disabled { opacity: .45; }
+
+.whead { position: absolute; z-index: 4; top: 0; left: 0; right: 0; background: #fff; padding-top: var(--sb); }
+.whead .bar { display: flex; gap: 10px; align-items: center; padding: 10px 16px; height: 48px; }
+.whead h2 { flex: 1; margin: 0; text-align: center; font: 600 18px/25px "Noto Sans TC", sans-serif; }
+.wbody { padding: calc(var(--sb) + 61px) 16px 0; display: flex; flex-direction: column; gap: 12px; }
+.box { background: #fff; border-radius: 12px; padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.box h3 { margin: 0; font: 600 14px/22px var(--font); }
+.ttl { display: flex; gap: 1px; align-items: center; flex-wrap: wrap; font: 600 18px/25px var(--font); }
+.ttl .sp { width: 16px; height: 16px; position: relative; }
+.ttl .sp img { position: absolute; left: 0; right: 0; top: -3.12%; bottom: -9.38%; width: 16px; height: 18px; }
+.qty { flex-direction: row; justify-content: space-between; align-items: center; padding: 16px; }
+.qty .r { display: flex; gap: 10px; align-items: center; }
+.qty .amt { font: 700 18px/1 Lato, sans-serif; color: var(--purple-500); }
+.qty .n { font: 600 16px/24px Lato, sans-serif; min-width: 10px; text-align: center; }
+.qty button img { width: 24px; height: 24px; }
+.qty button:disabled { opacity: .35; }
+.field { display: flex; flex-direction: column; gap: 2px; }
+.field label { padding: 0 2px; font: 400 14px/22px var(--font); }
+.field input, .field select { width: 100%; border: 1px solid #D2D4D5; border-radius: 8px; padding: 10px 12px 12px; font: 400 16px/24px var(--font); color: #000; background: #fff; -webkit-appearance: none; appearance: none; -webkit-user-select: text; user-select: text; }
+.field input:focus, .field select:focus { outline: none; border-color: var(--purple-400); }
+.field .sel { position: relative; }
+.field .sel select { color: var(--purple-800); padding-right: 40px; }
+.field .sel img { position: absolute; right: 12px; top: 50%; margin-top: -12px; width: 24px; height: 24px; pointer-events: none; }
+.pays { display: flex; flex-direction: column; gap: 10px; }
+.pay { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 8px; border: 1px solid #EEE; text-align: left; width: 100%; font: 400 14px/22px var(--font); }
+.pay.on { border: 2px solid var(--purple-400); padding: 11px; }
+.pay .pi { flex: 1; display: flex; gap: 6px; align-items: center; }
+.pay .ic { width: 24px; height: 24px; position: relative; overflow: hidden; flex: none; }
+.agree { display: flex; gap: 6px; justify-content: center; align-items: flex-start; font: 400 14px/22px var(--font); color: var(--gray-600); white-space: nowrap; flex-wrap: wrap; }
+.agree b { color: var(--purple-400); font-weight: 600; }
+.cbox { width: 24px; height: 24px; flex: none; position: relative; }
+.cbox::before { content: ""; position: absolute; inset: 3px; border-radius: 4px; border: 1.5px solid #D2D4D5; background: #fff; }
+.cbox.on::before { display: none; }
+.cbox.on { background: url(assets/check-on.svg) center / 100% 100% no-repeat; }
+.done { align-items: center; gap: 18px; padding: 28px 16px 32px; text-align: center; }
+.done .big { width: 50px; height: 50px; border-radius: 25px; background: var(--green-500); display: flex; align-items: center; justify-content: center; }
+.done .big img { width: 27.778px; height: 27.778px; }
+.done h1 { margin: 0; font: 600 22px/28px "Noto Sans TC", sans-serif; letter-spacing: .44px; }
+.done p { font: 400 16px/24px var(--font); color: var(--gray-600); margin-top: -10px; }
+.kvlist { display: flex; flex-direction: column; gap: 8px; }
+.kvlist div { display: flex; gap: 12px; font: 400 14px/22px var(--font); color: var(--purple-800); }
+.kvlist div span:first-child { width: 56px; flex: none; color: var(--gray-600); }
+.paying { position: absolute; z-index: 65; inset: 0; background: rgba(46,46,77,.35); display: flex; align-items: center; justify-content: center; }
+.paying .card { background: #fff; border-radius: 16px; padding: 24px 28px; display: flex; flex-direction: column; gap: 12px; align-items: center; font: 500 15px/22px var(--font); color: var(--purple-800); }
+.paying .spin { width: 32px; height: 32px; border-width: 3px; }
+
+/* ---------- My eSIM ---------- */
+.me-hero { position: absolute; left: 0; right: 0; top: calc(var(--sb) - 62px); height: 439px; overflow: hidden; pointer-events: none; }
+.me-hero .art { position: absolute; top: 0; left: 50%; width: 402px; height: 439px; margin-left: -201px; }
+.me-hero .grad { position: absolute; left: -100vw; right: -100vw; top: 0; height: 573px;
+  background: linear-gradient(118.98deg, #C6C3F9 4.53%, #A9A4F0 23.82%, #7473C0 65.7%, #6968B2 90.1%, #55549C 99.82%); }
+.me-hero .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 145px; background: linear-gradient(180deg, rgba(241,241,249,0), var(--purple-100)); }
+.me-back { left: 16px; z-index: 2; }
+.me-body { position: relative; padding: calc(var(--sb) + 48px) 16px 24px; display: flex; flex-direction: column; gap: 28px; }
+.ecard { position: relative; border-radius: 16px; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 17px;
+  background: rgba(255,255,255,.5); -webkit-backdrop-filter: blur(20px) saturate(1.3); backdrop-filter: blur(20px) saturate(1.3);
+  box-shadow: 1.25px 0 0 -.75px rgba(69,69,115,.1), -1.25px 0 0 -.75px rgba(69,69,115,.1), 0 0 5px .5px rgba(69,69,115,.08), 0 8px 20px rgba(69,69,115,.1); }
+.ecard .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.ecard .ttl { flex-wrap: nowrap; white-space: nowrap; }
+.estatus { display: flex; gap: 6px; align-items: center; background: #EEE; border-radius: 999px; padding: 4px 10px; font: 600 12px/18px "Noto Sans TC", sans-serif; color: var(--gray-700); white-space: nowrap; }
+.estatus img { width: 8px; height: 8px; }
+.stats { display: flex; justify-content: space-between; white-space: nowrap; }
+.stats div { display: flex; flex-direction: column; }
+.stats div:last-child { align-items: flex-end; }
+.stats small { font: 400 12px/18px var(--font); color: var(--gray-700); }
+.stats span { font: 400 14px/22px var(--font); }
+.usage { display: flex; flex-direction: column; gap: 4px; margin-top: 7px; }
+.usage .track { height: 8px; border-radius: 999px; background: #fff; }
+.usage .row { display: flex; justify-content: space-between; font: 400 14px/22px var(--font); color: var(--gray-700); }
+.eacts { display: flex; gap: 8px; margin-top: 3px; }
+.eacts button { flex: 1; border-radius: 999px; padding: 10px 0 12px; font: 600 14px/22px "Noto Sans TC", sans-serif; background: #fff; }
+.eacts .install { background: var(--yellow-500); }
+.eacts button:active { transform: scale(.97); }
+.secs { display: flex; flex-direction: column; gap: 16px; }
+.sec-card { background: #fff; border-radius: 12px; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--card-shadow); }
+.sec-card .h { display: flex; gap: 4px; align-items: center; font: 600 16px/24px var(--font); color: var(--purple-800); }
+.sec-card .h img { width: 24px; height: 24px; }
+.sec-card .h .soon-tag { margin-left: auto; background: #D9F3F8; color: #1DBDDD; border-radius: 4px; padding: 1px 5px 2px; font: 600 12px/18px "Noto Sans TC", sans-serif; }
+.sec-card .muted { font: 400 14px/22px var(--font); color: var(--gray-600); }
+.steps-txt { display: flex; flex-direction: column; gap: 4px; }
+.estatus.ok { background: var(--green-100); color: var(--green-500); }
+.estatus.err { background: #FDE8E8; color: #E5484D; }
+.usage .track { display: flex; overflow: hidden; }
+.usage .track i, .day i { display: block; height: 8px; border-radius: 4px; background: var(--purple-400); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.usage .row b { font-weight: 600; color: #000; }
+.days-used { display: flex; flex-direction: column; gap: 12px; }
+.day { display: flex; gap: 10px; align-items: center; font: 400 14px/22px var(--font); white-space: nowrap; }
+.day span:first-child { color: var(--gray-600); }
+.day .t { flex: 1; min-width: 0; height: 8px; border-radius: 999px; background: var(--purple-100); display: flex; overflow: hidden; }
+.kvlist .bad { color: #E5484D; }
+.fix { gap: 20px; padding: 12px 16px 16px; }
+.fix .top { display: flex; flex-direction: column; gap: 12px; }
+.checks { display: flex; flex-direction: column; gap: 10px; }
+.check { display: flex; gap: 6px; align-items: center; font: 400 14px/22px var(--font); color: var(--purple-800); }
+.check .v { width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex: none; }
+.check .v img { width: 10px; height: 10px; }
+.check .v.ok { background: var(--green-500); } .check .v.no { background: #E5484D; }
+.check.bad { color: #E5484D; }
+.fix-steps { background: #FDE8E8; border-radius: 8px; padding: 10px 16px 16px; display: flex; flex-direction: column; gap: 4px; font: 400 14px/22px var(--font); }
+.fix-steps b { color: #B42328; font-weight: 600; }
+.fix .cta { display: flex; flex-direction: column; gap: 4px; }
+.btn-red { width: 100%; background: #E5484D; color: #fff; border-radius: 999px; padding: 12px 16px; font: 600 14px/22px "Noto Sans TC", sans-serif; display: flex; gap: 8px; align-items: center; justify-content: center; }
+.btn-red .spin { width: 16px; height: 16px; border-color: rgba(255,255,255,.4); border-top-color: #fff; }
+.support { text-align: center; padding: 6px 0; font: 400 14px/22px var(--font); color: var(--gray-600); }
+.support u { cursor: pointer; }
+
+/* ---------- iOS system overlay ---------- */
+#ios { position: absolute; z-index: 55; inset: 0; }
+.ios-dim { position: absolute; inset: 0; background: rgba(30,27,51,.42); animation: fadein .25s both; }
+@keyframes fadein { from { opacity: 0; } }
+.ios-alert { position: absolute; left: calc(50% - 2.31px); top: calc(var(--sb) + 219.7px); width: 296.186px; height: 298.654px; margin-left: -148.093px;
+  border-radius: 30.236px; overflow: hidden; animation: alertin .3s cubic-bezier(.2,1.2,.4,1) both; }
+.ios-alert img { position: absolute; height: 288.84%; left: -17.08%; top: -98.35%; width: 134.38%; max-width: none; }
+@keyframes alertin { from { opacity: 0; transform: scale(1.12); } }
+.hot { position: absolute; background: transparent; border-radius: 999px; }
+.hot:active { background: rgba(0,0,0,.08); }
+.ios-sheet { position: absolute; inset: 0; background: #fff; overflow: hidden; }
+.ios-sheet.up { animation: sheetup .42s cubic-bezier(.32,.72,0,1) both; }
+.ios-sheet.push { animation: pushin .38s cubic-bezier(.32,.72,0,1) both; }
+@keyframes sheetup { from { transform: translateY(100%); } }
+@keyframes pushin { from { transform: translateX(100%); } }
+.ios-shot { position: absolute; left: 50%; top: calc(var(--sb) - 62px); width: 402px; height: 874px; margin-left: -201px; }
+.ios-shot > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.ios-busy { position: absolute; inset: 0; background: rgba(255,255,255,.7); display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center;
+  font: 500 15px/22px -apple-system, system-ui, sans-serif; color: #3C3C43; }
+.ios-busy .spin { width: 28px; height: 28px; border-width: 3px; border-color: #D1D1D6; border-top-color: #8E8E93; }
+
+/* ---------- Overlays ---------- */
+.toast { position: absolute; z-index: 60; left: 50%; bottom: 120px; transform: translate(-50%, 10px); opacity: 0; pointer-events: none;
+  background: rgba(46,46,77,.92); color: #fff; padding: 10px 16px; border-radius: 12px; font: 400 14px/20px var(--font); white-space: nowrap; transition: .25s; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.staff { position: absolute; z-index: 70; inset: 0; background: rgba(46,46,77,.45); display: flex; align-items: flex-end; }
+.staff .sheet { width: 100%; background: #fff; border-radius: 20px 20px 0 0; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 10px; }
+.staff h3 { margin: 0 0 4px; font: 600 16px/24px var(--font); color: var(--purple-800); }
+.staff .row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: var(--purple-100); font: 500 15px/22px var(--font); color: var(--purple-800); text-align: left; width: 100%; }
+.staff .row small { color: var(--gray-700); font-weight: 400; font-size: 12px; }
+.staff .close { margin-top: 4px; padding: 12px; border-radius: 12px; background: var(--purple-500); color: #fff; font: 600 15px/22px var(--font); }
+:focus-visible { outline: 2px solid var(--purple-500); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .screen, .rise, .wave i, .think .ds i { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div id="stage">
+<div id="device">
+  <div class="statusbar" aria-hidden="true">
+    <div class="time">9:41</div><div class="notch"></div>
+    <div class="levels">
+      <div class="cell"><i style="height:6.333px"></i><i style="height:8.67px"></i><i style="height:11px"></i><i style="height:13.667px"></i></div>
+      <img src="assets/sb-wifi.svg" width="19.333" height="14.333" alt="">
+      <img src="assets/sb-battery.svg" width="29.333" height="13.667" alt="">
+    </div>
+  </div>
+
+  <!-- ================= HOME ================= -->
+  <section id="home" class="screen" aria-label="首頁">
+    <div class="home-scroll" id="homeScroll">
+      <div class="kv" aria-hidden="true">
+        <svg class="kv-svg" id="kvSvg" aria-hidden="true" width="402" height="301" viewBox="0 0 402 301" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g clip-path="url(#clip0_2094_62593)">
+<use xlink:href="#stroke0_2094_62593" fill="url(#paint0_linear_2094_62593)"/>
+<use xlink:href="#stroke0_2094_62593" fill="url(#paint1_linear_2094_62593)" fill-opacity="0.18"/>
+<use xlink:href="#stroke0_2094_62593" fill="url(#paint2_linear_2094_62593)"/>
+<g opacity="0.22" filter="url(#filter0_f_2094_62593)">
+<circle cx="96.5" cy="123.5" r="135.5" fill="#8779C9" fill-opacity="0.2"/>
+</g>
+<mask id="mask0_2094_62593" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="234" y="71" width="230" height="230">
+<path d="M463.338 186C463.338 249.147 412.147 300.338 349 300.338C285.853 300.338 234.662 249.147 234.662 186C234.662 122.853 285.853 71.6624 349 71.6624C412.147 71.6624 463.338 122.853 463.338 186Z" fill="#D9D9D9" stroke-width="1.32477" stroke="black"/>
+</mask>
+<g mask="url(#mask0_2094_62593)">
+<g filter="url(#filter1_f_2094_62593)">
+<circle cx="349" cy="186" r="101.32" stroke="white" stroke-width="27.36"/>
+</g>
+<mask id="stroke1_2094_62593" fill="white">
+<path d="M392.156 292.379C352.402 308.558 300.885 274.077 277.09 215.363C253.294 156.649 266.231 95.937 305.986 79.7582C345.74 63.5794 397.257 98.0607 421.052 156.774C444.847 215.488 431.91 276.2 392.156 292.379Z"/>
+</mask>
+<path d="M392.156 292.379L391.813 291.534C372.3 299.475 349.803 295.023 329.145 281.197C308.493 267.374 289.773 244.23 277.934 215.019L277.09 215.363L276.245 215.707C288.202 245.21 307.137 268.663 328.131 282.714C349.119 296.762 372.257 301.462 392.498 293.224L392.156 292.379ZM277.09 215.363L277.934 215.019C266.096 185.809 263.412 156.138 268.598 131.799C273.786 107.455 286.815 88.5447 306.328 80.6034L305.986 79.7582L305.643 78.9129C285.402 87.1505 272.086 106.686 266.815 131.421C261.543 156.161 264.288 186.204 276.245 215.707L277.09 215.363ZM305.986 79.7582L306.328 80.6034C325.841 72.6621 348.339 77.1138 368.996 90.9403C389.648 104.763 408.369 127.908 420.207 157.118L421.052 156.774L421.897 156.431C409.94 126.927 391.004 103.474 370.011 89.4229C349.022 75.375 325.884 70.6754 305.643 78.9129L305.986 79.7582ZM421.052 156.774L420.207 157.118C432.046 186.329 434.73 215.999 429.543 240.338C424.356 264.683 411.326 283.593 391.813 291.534L392.156 292.379L392.498 293.224C412.739 284.987 426.056 265.451 431.326 240.717C436.598 215.976 433.854 185.934 421.897 156.431L421.052 156.774Z" fill="url(#paint3_linear_2094_62593)" mask="url(#stroke1_2094_62593)"/>
+<path d="M392.156 292.379L391.813 291.534C372.3 299.475 349.803 295.023 329.145 281.197C308.493 267.374 289.773 244.23 277.934 215.019L277.09 215.363L276.245 215.707C288.202 245.21 307.137 268.663 328.131 282.714C349.119 296.762 372.257 301.462 392.498 293.224L392.156 292.379ZM277.09 215.363L277.934 215.019C266.096 185.809 263.412 156.138 268.598 131.799C273.786 107.455 286.815 88.5447 306.328 80.6034L305.986 79.7582L305.643 78.9129C285.402 87.1505 272.086 106.686 266.815 131.421C261.543 156.161 264.288 186.204 276.245 215.707L277.09 215.363ZM305.986 79.7582L306.328 80.6034C325.841 72.6621 348.339 77.1138 368.996 90.9403C389.648 104.763 408.369 127.908 420.207 157.118L421.052 156.774L421.897 156.431C409.94 126.927 391.004 103.474 370.011 89.4229C349.022 75.375 325.884 70.6754 305.643 78.9129L305.986 79.7582ZM421.052 156.774L420.207 157.118C432.046 186.329 434.73 215.999 429.543 240.338C424.356 264.683 411.326 283.593 391.813 291.534L392.156 292.379L392.498 293.224C412.739 284.987 426.056 265.451 431.326 240.717C436.598 215.976 433.854 185.934 421.897 156.431L421.052 156.774Z" fill="url(#paint4_linear_2094_62593)" mask="url(#stroke1_2094_62593)"/>
+<mask id="stroke2_2094_62593" fill="white">
+<path d="M434.453 262.678C428.574 269.219 385.53 240.253 338.31 197.98C291.091 155.708 257.577 116.137 263.456 109.596C269.335 103.055 312.38 132.022 359.599 174.294C406.819 216.567 440.332 256.138 434.453 262.678Z"/>
+</mask>
+<path d="M434.453 262.678L433.774 262.07C433.355 262.536 432.449 262.845 430.694 262.607C428.985 262.375 426.727 261.654 423.958 260.439C418.432 258.015 411.078 253.722 402.395 247.879C385.041 236.201 362.508 218.419 338.92 197.302L338.31 197.98L337.701 198.659C361.332 219.814 383.931 237.652 401.374 249.39C410.09 255.255 417.55 259.619 423.223 262.107C426.054 263.349 428.493 264.147 430.448 264.413C432.356 264.672 434.081 264.456 435.133 263.287L434.453 262.678ZM338.31 197.98L338.92 197.302C315.331 176.185 295.18 155.754 281.669 139.8C274.909 131.818 269.836 124.986 266.823 119.766C265.313 117.15 264.35 114.988 263.934 113.318C263.507 111.602 263.717 110.67 264.136 110.204L263.456 109.596L262.777 108.988C261.725 110.157 261.697 111.892 262.162 113.758C262.638 115.669 263.697 118.001 265.241 120.676C268.334 126.036 273.488 132.965 280.274 140.977C293.855 157.012 314.07 177.503 337.701 198.659L338.31 197.98ZM263.456 109.596L264.136 110.204C264.554 109.739 265.46 109.429 267.215 109.667C268.924 109.899 271.182 110.621 273.951 111.835C279.477 114.259 286.832 118.553 295.514 124.396C312.868 136.074 335.401 153.855 358.989 174.972L359.599 174.294L360.209 173.616C336.578 152.461 313.978 134.623 296.535 122.885C287.82 117.019 280.36 112.656 274.686 110.167C271.855 108.925 269.417 108.127 267.462 107.861C265.553 107.602 263.828 107.818 262.777 108.988L263.456 109.596ZM359.599 174.294L358.989 174.972C382.578 196.09 402.729 216.52 416.241 232.474C423.001 240.456 428.074 247.288 431.086 252.508C432.596 255.124 433.559 257.286 433.975 258.956C434.403 260.672 434.192 261.604 433.774 262.07L434.453 262.678L435.133 263.287C436.184 262.117 436.212 260.382 435.747 258.516C435.271 256.606 434.212 254.273 432.669 251.599C429.575 246.239 424.421 239.31 417.635 231.297C404.055 215.262 383.84 194.771 360.209 173.616L359.599 174.294Z" fill="url(#paint5_linear_2094_62593)" mask="url(#stroke2_2094_62593)"/>
+<path d="M434.453 262.678L433.774 262.07C433.355 262.536 432.449 262.845 430.694 262.607C428.985 262.375 426.727 261.654 423.958 260.439C418.432 258.015 411.078 253.722 402.395 247.879C385.041 236.201 362.508 218.419 338.92 197.302L338.31 197.98L337.701 198.659C361.332 219.814 383.931 237.652 401.374 249.39C410.09 255.255 417.55 259.619 423.223 262.107C426.054 263.349 428.493 264.147 430.448 264.413C432.356 264.672 434.081 264.456 435.133 263.287L434.453 262.678ZM338.31 197.98L338.92 197.302C315.331 176.185 295.18 155.754 281.669 139.8C274.909 131.818 269.836 124.986 266.823 119.766C265.313 117.15 264.35 114.988 263.934 113.318C263.507 111.602 263.717 110.67 264.136 110.204L263.456 109.596L262.777 108.988C261.725 110.157 261.697 111.892 262.162 113.758C262.638 115.669 263.697 118.001 265.241 120.676C268.334 126.036 273.488 132.965 280.274 140.977C293.855 157.012 314.07 177.503 337.701 198.659L338.31 197.98ZM263.456 109.596L264.136 110.204C264.554 109.739 265.46 109.429 267.215 109.667C268.924 109.899 271.182 110.621 273.951 111.835C279.477 114.259 286.832 118.553 295.514 124.396C312.868 136.074 335.401 153.855 358.989 174.972L359.599 174.294L360.209 173.616C336.578 152.461 313.978 134.623 296.535 122.885C287.82 117.019 280.36 112.656 274.686 110.167C271.855 108.925 269.417 108.127 267.462 107.861C265.553 107.602 263.828 107.818 262.777 108.988L263.456 109.596ZM359.599 174.294L358.989 174.972C382.578 196.09 402.729 216.52 416.241 232.474C423.001 240.456 428.074 247.288 431.086 252.508C432.596 255.124 433.559 257.286 433.975 258.956C434.403 260.672 434.192 261.604 433.774 262.07L434.453 262.678L435.133 263.287C436.184 262.117 436.212 260.382 435.747 258.516C435.271 256.606 434.212 254.273 432.669 251.599C429.575 246.239 424.421 239.31 417.635 231.297C404.055 215.262 383.84 194.771 360.209 173.616L359.599 174.294Z" fill="url(#paint6_linear_2094_62593)" mask="url(#stroke2_2094_62593)"/>
+<mask id="stroke3_2094_62593" fill="white">
+<path d="M455.982 144.082C460.539 155.737 416.305 183.924 357.184 207.04C298.062 230.156 246.44 239.447 241.884 227.793C237.327 216.138 281.56 187.951 340.682 164.835C399.804 141.719 451.425 132.428 455.982 144.082Z"/>
+</mask>
+<path d="M455.982 144.082C460.539 155.737 416.305 183.924 357.184 207.04C298.062 230.156 246.44 239.447 241.884 227.793C237.327 216.138 281.56 187.951 340.682 164.835C399.804 141.719 451.425 132.428 455.982 144.082Z" stroke-width="1.824" stroke="url(#paint7_linear_2094_62593)" mask="url(#stroke3_2094_62593)"/>
+<path d="M455.982 144.082C460.539 155.737 416.305 183.924 357.184 207.04C298.062 230.156 246.44 239.447 241.884 227.793C237.327 216.138 281.56 187.951 340.682 164.835C399.804 141.719 451.425 132.428 455.982 144.082Z" stroke-width="1.824" stroke="url(#paint8_linear_2094_62593)" mask="url(#stroke3_2094_62593)"/>
+<mask id="stroke4_2094_62593" fill="white">
+<path d="M418.126 94.1142C454.348 121.418 452.736 184.646 414.525 235.338C376.314 286.03 315.974 304.989 279.752 277.685C243.53 250.381 245.142 187.153 283.353 136.462C321.564 85.7698 381.904 66.8103 418.126 94.1142Z"/>
+</mask>
+<path d="M418.126 94.1142C454.348 121.418 452.736 184.646 414.525 235.338C376.314 286.03 315.974 304.989 279.752 277.685C243.53 250.381 245.142 187.153 283.353 136.462C321.564 85.7698 381.904 66.8103 418.126 94.1142Z" stroke-width="1.824" stroke="url(#paint9_linear_2094_62593)" mask="url(#stroke4_2094_62593)"/>
+<path d="M418.126 94.1142C454.348 121.418 452.736 184.646 414.525 235.338C376.314 286.03 315.974 304.989 279.752 277.685C243.53 250.381 245.142 187.153 283.353 136.462C321.564 85.7698 381.904 66.8103 418.126 94.1142Z" stroke-width="1.824" stroke="url(#paint10_linear_2094_62593)" mask="url(#stroke4_2094_62593)"/>
+<use xlink:href="#stroke5_2094_62593" stroke="#8779C9"/>
+<use xlink:href="#stroke5_2094_62593" stroke="url(#paint11_linear_2094_62593)"/>
+<use xlink:href="#stroke5_2094_62593" stroke="url(#paint12_linear_2094_62593)"/>
+</g>
+<g filter="url(#filter2_f_2094_62593)">
+<circle cx="384.891" cy="82.3602" r="1.41975" fill="#E8E2FF"/>
+<circle cx="306.508" cy="111.933" r="1.41975" fill="#E8E2FF"/>
+<circle cx="396.246" cy="115.032" r="1.41975" fill="#E8E2FF"/>
+<circle cx="265.753" cy="147.693" r="1.41975" fill="#E8E2FF"/>
+<circle cx="333.396" cy="151.928" r="1.41975" fill="#E8E2FF"/>
+<circle cx="290.437" cy="150.494" r="1.41975" fill="#E8E2FF"/>
+<circle cx="401.155" cy="187.448" r="1.41975" fill="#E8E2FF"/>
+<circle cx="285.827" cy="189.95" r="1.41975" fill="#E8E2FF"/>
+<circle cx="340.892" cy="199.381" r="1.41975" fill="#E8E2FF"/>
+</g>
+<circle cx="384.891" cy="82.3602" r="1.41975" fill="white"/>
+<circle cx="306.508" cy="111.933" r="1.41975" fill="white"/>
+<circle cx="396.246" cy="115.032" r="1.41975" fill="white"/>
+<circle cx="265.753" cy="147.693" r="1.41975" fill="white"/>
+<circle cx="333.396" cy="151.928" r="1.41975" fill="white"/>
+<circle cx="290.437" cy="150.494" r="1.41975" fill="white"/>
+<circle cx="401.155" cy="187.448" r="1.41975" fill="white"/>
+<circle cx="285.827" cy="189.95" r="1.41975" fill="white"/>
+<circle cx="340.892" cy="199.381" r="1.41975" fill="white"/>
+<rect y="156" width="402" height="145" fill="url(#paint13_linear_2094_62593)"/>
+</g>
+<defs>
+<filter id="filter0_f_2094_62593" x="-159" y="-132" width="511" height="511" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="60" result="effect1_foregroundBlur_2094_62593"/>
+</filter>
+<filter id="filter1_f_2094_62593" x="142.8" y="-20.2" width="412.4" height="412.4" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="45.6" result="effect1_foregroundBlur_2094_62593"/>
+</filter>
+<filter id="filter2_f_2094_62593" x="257.949" y="74.5564" width="176.223" height="132.628" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="3.192" result="effect1_foregroundBlur_2094_62593"/>
+</filter>
+<linearGradient id="paint0_linear_2094_62593" x1="-4.63123e-06" y1="-7.52498" x2="445.705" y2="84.2632" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F5F3FF"/>
+<stop offset="0.55" stop-color="#E9E6FF"/>
+<stop offset="1" stop-color="#D8D3FF"/>
+</linearGradient>
+<linearGradient id="paint1_linear_2094_62593" x1="255.913" y1="22.7857" x2="498.612" y2="149.747" gradientUnits="userSpaceOnUse">
+<stop stop-color="#7473C0" stop-opacity="0"/>
+<stop offset="1" stop-color="#7473C0"/>
+</linearGradient>
+<linearGradient id="paint2_linear_2094_62593" x1="28.0194" y1="6.24253e-06" x2="473.065" y2="247.537" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="0.366016" stop-color="#E9E6FF"/>
+<stop offset="0.553333" stop-color="#D8D3FF"/>
+<stop offset="0.812491" stop-color="#A09EDC"/>
+<stop offset="1" stop-color="#7473C0"/>
+</linearGradient>
+<linearGradient id="paint3_linear_2094_62593" x1="308.176" y1="72.8727" x2="363.713" y2="290.846" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7B9FF"/>
+<stop offset="1" stop-color="#7473C0"/>
+</linearGradient>
+<linearGradient id="paint4_linear_2094_62593" x1="388.915" y1="257.362" x2="287.902" y2="115.606" gradientUnits="userSpaceOnUse">
+<stop offset="0.0081" stop-color="white" stop-opacity="0"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+<linearGradient id="paint5_linear_2094_62593" x1="285.485" y1="112.382" x2="271.555" y2="308.918" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7B9FF"/>
+<stop offset="1" stop-color="#7473C0"/>
+</linearGradient>
+<linearGradient id="paint6_linear_2094_62593" x1="463.416" y1="285.388" x2="360.672" y2="60.2917" gradientUnits="userSpaceOnUse">
+<stop offset="0.3568" stop-color="white" stop-opacity="0"/>
+<stop offset="0.8137" stop-color="white"/>
+</linearGradient>
+<linearGradient id="paint7_linear_2094_62593" x1="308.662" y1="176.309" x2="494.356" y2="257.751" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7B9FF"/>
+<stop offset="1" stop-color="#7473C0"/>
+</linearGradient>
+<linearGradient id="paint8_linear_2094_62593" x1="300.868" y1="284.527" x2="555.704" y2="143.888" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0"/>
+<stop offset="0.769" stop-color="white"/>
+<stop offset="0.9831" stop-color="white" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint9_linear_2094_62593" x1="293.42" y1="116.529" x2="373.671" y2="221.324" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7B9FF"/>
+<stop offset="1" stop-color="#7877CF"/>
+</linearGradient>
+<linearGradient id="paint10_linear_2094_62593" x1="318.008" y1="319.39" x2="420.927" y2="76.156" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0"/>
+<stop offset="0.6525" stop-color="white"/>
+</linearGradient>
+<linearGradient id="paint11_linear_2094_62593" x1="301.505" y1="77.831" x2="391.98" y2="312.467" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7B9FF"/>
+<stop offset="1" stop-color="#7473C0"/>
+</linearGradient>
+<linearGradient id="paint12_linear_2094_62593" x1="280.828" y1="87.169" x2="419.347" y2="310.249" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="0.9831" stop-color="white" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint13_linear_2094_62593" x1="201" y1="168.006" x2="201" y2="301" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0"/>
+<stop offset="1" stop-color="#F1F1F9"/>
+</linearGradient>
+<clipPath id="clip0_2094_62593">
+<rect width="402" height="301" fill="white"/>
+</clipPath>
+<path id="stroke0_2094_62593" d="M0 0H402V301H0V0Z"/>
+<path id="stroke5_2094_62593" d="M463.544 186C463.544 249.261 412.261 300.544 349 300.544C285.739 300.544 234.456 249.261 234.456 186C234.456 122.739 285.739 71.456 349 71.456C412.261 71.456 463.544 122.739 463.544 186Z" stroke-width="0.912"/>
+</defs>
+</svg>
+      </div>
+
+      <div class="home-inner">
+        <div class="logo" id="logo"><div class="abs" style="inset:16.19% 2.97% 12.86% 1.67%"><img class="fill" src="assets/logo-purple.svg" alt="WifiMi"></div></div>
+        <div class="headline"><p>隨時隨地，</p><p>分享你所看到的世界</p></div>
+
+        <div class="col">
+          <button class="ai-card" id="openChat" aria-label="開啟 WifiMi AI 旅遊助理">
+            <div class="top">
+              <div class="ai-head"><img src="assets/ai-sparkle.svg" width="24" height="24" alt=""><b>WifiMi AI</b><span>旅遊助理</span></div>
+              <div class="ai-input">告訴 AI 你的行程，幫你選方案</div>
+            </div>
+            <div class="chips"><span class="chip">日本 5 天</span><span class="chip">韓國 7 天</span><span class="chip">西歐荷比盧</span><span class="chip">泰國 8 天</span></div>
+          </button>
+
+          <div class="sec">
+            <div class="sec-h"><h2>熱門目的地</h2><button class="link soon">查看全部<img src="assets/chev-sm.svg" width="18" height="18" alt=""></button></div>
+            <div class="grid2">
+              <button class="dest soon"><div class="badge"><img class="ring" src="assets/badge-ring.svg" alt=""><div class="flag"><img class="fill" src="assets/flag-jp.svg" alt=""></div></div><div><p class="t14s">日本</p><p class="t12">低至 NT$ 49</p></div></button>
+              <button class="dest soon"><div class="badge"><img class="ring" src="assets/badge-ring.svg" alt=""><div class="flag"><img class="fill" src="assets/flag-kr.svg" alt=""></div></div><div><p class="t14s">韓國</p><p class="t12">低至 NT$ 49</p></div></button>
+              <button class="dest soon"><div class="badge"><div class="flag"><img class="fill" src="assets/flag-th.svg" alt=""></div></div><div><p class="t14s">泰國</p><p class="t12">低至 NT$ 39</p></div></button>
+              <button class="dest soon"><div class="badge"><div class="flag"><img class="fill" src="assets/flag-us.svg" alt=""></div></div><div><p class="t14s">美國</p><p class="t12">低至 NT$ 59</p></div></button>
+              <button class="dest soon"><div class="badge"><div class="flag"><img class="fill" src="assets/flag-vn.svg" alt=""></div></div><div><p class="t14s">越南</p><p class="t12">低至 NT$ 39</p></div></button>
+              <button class="dest soon"><div class="badge"><div class="flag"><img class="fill" src="assets/flag-eu.svg" alt=""></div></div><div><p class="t14s">歐洲</p><p class="t12">低至 NT$ 79</p></div></button>
+            </div>
+          </div>
+
+          <div>
+            <div class="banner">
+              <img class="abs" src="assets/banner-deco.svg" style="left:240px;top:-20px;width:150px;height:150px" alt="">
+              <div style="position:relative;display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+                <span class="tag">限時活動</span>
+                <div style="padding-left:1px;display:flex;flex-direction:column;gap:1px">
+                  <p style="font:600 18px/25px 'Noto Sans TC',sans-serif">新會員首購優惠</p>
+                  <p style="font:400 12px/18px 'Noto Sans TC',sans-serif;color:var(--gray-700)">註冊即可領取專屬折扣</p>
+                </div>
+              </div>
+              <button class="btn-dark soon">查看活動<img src="assets/chev-white.svg" width="14" height="14" alt=""></button>
+              <img class="abs" src="assets/banner-gift.svg" style="left:251px;top:3px;width:113px;height:102.904px" alt="">
+            </div>
+            <div class="dots"><i class="on"></i><i></i><i></i></div>
+          </div>
+
+          <div class="sec">
+            <div class="sec-h"><h2>為什麼選擇 WifiMi 旅遊 eSIM？</h2></div>
+            <div class="grid2" style="gap:12px">
+              <div class="reason"><div class="top"><div class="tile s36"><div class="ico s30">
+                  <div style="inset:8.33% 18.25% 8.92% 17.33%"><div style="inset:-1.11% 0 0 -1.42%"><img src="assets/i-bolt.svg" alt=""></div></div>
+                </div></div><span class="num">01</span></div>
+                <div><p class="t14s">即時發貨與啟用</p><p class="t12">購買後數秒收到 QR Code，抵達即可啟用。</p></div></div>
+              <div class="reason"><div class="top"><div class="tile s36"><div class="ico s30">
+                  <div style="inset:8.33%"><img src="assets/i-globe-body.svg" alt=""></div>
+                  <div style="inset:11% 11.67%"><div style="inset:-2.46% -2.39%"><img src="assets/i-globe-grid.svg" alt=""></div></div>
+                  <div style="inset:15.67% 63% 65.33% 17%"><div style="inset:-10.53% -10%"><img src="assets/i-rim.svg" alt=""></div></div>
+                </div></div><span class="num">02</span></div>
+                <div><p class="t14s">多國覆蓋</p><p class="t12">跨洲際保持連線，都市或偏遠地區都穩定。</p></div></div>
+              <div class="reason"><div class="top"><div class="tile s36"><div class="ico s30">
+                  <div style="inset:20.67% 21.33% 6.33% 6.67%"><div style="inset:-1.26% 0 0 -1.27%"><img src="assets/i-spark-l.svg" alt=""></div></div>
+                  <div style="inset:4.67% 4% 58.33% 59%"><div style="inset:-2.03% 0 0 -2.03%"><img src="assets/i-spark-s.svg" alt=""></div></div>
+                </div></div><span class="num">03</span></div>
+                <div><p class="t14s">AI 智慧推薦</p><p class="t12">說出行程，AI 立即推薦最合適的方案。</p></div></div>
+              <div class="reason"><div class="top"><div class="tile s36"><div class="ico s30">
+                  <div style="inset:7.67% 22.67% 7.67% 27.33%"><img src="assets/i-phone-rear.svg" alt=""></div>
+                  <div style="inset:9.33% 28.67% 11% 22.67%"><div style="inset:-1.36% -2.23%"><img src="assets/i-phone-glass.svg" alt=""></div></div>
+                  <div style="inset:15.67% 44% 16.67% 38%"><img src="assets/i-phone-ctrl.svg" alt=""></div>
+                </div></div><span class="num">04</span></div>
+                <div><p class="t14s">保留原有號碼</p><p class="t12">雙卡並用，原有號碼照常收電話與簡訊。</p></div></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="sec-h"><h2>eSIM 指南</h2><button class="link soon" style="gap:2px">查看全部文章<img src="assets/chev-purple.svg" width="16" height="16" alt=""></button></div>
+            <div class="panel">
+              <p style="font:400 14px/22px var(--font);color:var(--purple-800)">三步驟完成使用</p>
+              <div class="steps">
+                <div class="step"><div class="tile s40"><div class="ico s34">
+                    <div style="inset:7.35%"><div style="inset:-.26%"><img src="assets/i-globe.svg" alt=""></div></div>
+                  </div></div>
+                  <div><p class="t14s">選擇目的地</p><p class="t12">從全球多國與地區中，選擇你的旅遊目的地。</p></div></div>
+                <div class="step"><div class="tile s40"><div class="ico s34">
+                    <div style="inset:13.01% 5.29% 58.24% 5.29%"><img src="assets/i-wifi-o.svg" alt=""></div>
+                    <div style="inset:36.4% 20% 40.59% 20%"><div style="inset:-.32% 0 0 0"><img src="assets/i-wifi-m.svg" alt=""></div></div>
+                    <div style="inset:59.04% 33.82% 23.53% 33.82%"><img src="assets/i-wifi-i.svg" alt=""></div>
+                    <div style="inset:75.88% 42.35% 7.94% 42.35%"><img src="assets/i-wifi-dot.svg" alt=""></div>
+                  </div></div>
+                  <div><p class="t14s">選擇流量方案</p><p class="t12">依流量需求與行程天數，挑選最合適的方案。</p></div></div>
+                <div class="step"><div class="tile s40"><div class="ico s34">
+                    <div style="inset:8.38% 59.85% 59.26% 8.38%"><div style="inset:-3.18% -12.5% -12.27% -3.24%"><img src="assets/i-qr-tl.svg" alt=""></div></div>
+                    <div style="inset:8.38% 12.79% 59.26% 55.44%"><div style="inset:-3.18% -12.5% -12.27% -3.24%"><img src="assets/i-qr-tr.svg" alt=""></div></div>
+                    <div style="inset:55.44% 59.85% 12.21% 8.38%"><div style="inset:-3.18% -12.5% -12.27% -3.24%"><img src="assets/i-qr-bl.svg" alt=""></div></div>
+                    <div style="inset:54.41% 18.82% 20% 54.41%"><div style="inset:-2.87% 0 0 -2.75%"><img src="assets/i-qr-c.svg" alt=""></div></div>
+                    <div style="inset:54.41% 8.82% 31.47% 77.65%"><div style="inset:-5.21% 0 0 -5.43%"><img src="assets/i-qr-t.svg" alt=""></div></div>
+                    <div style="inset:82.35% 32.06% 7.65% 54.41%"><div style="inset:-7.35% 0 0 -5.43%"><img src="assets/i-qr-b.svg" alt=""></div></div>
+                    <div style="inset:77.94% 8.82% 7.65% 80%"><div style="inset:-5.1% 0 0 -6.58%"><img src="assets/i-qr-r.svg" alt=""></div></div>
+                  </div></div>
+                  <div><p class="t14s">安裝 eSIM</p><p class="t12">於 App 內點擊一鍵安裝，五分鐘內安裝完成。</p></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="sec-h"><h2>常見問題</h2></div>
+            <div class="faq" id="faq">
+              <button class="faq-item open"><div class="faq-q"><span class="t14s">什麼是旅遊 eSIM？</span><img src="assets/chev-down.svg" alt=""></div>
+                <p class="faq-a">eSIM 是內建於手機的數位 SIM 卡，不需插入實體卡片，掃描 QR Code 即可下載並啟用網路方案，適合出國旅遊使用。</p></button>
+              <button class="faq-item"><div class="faq-q"><span class="t14s">我的手機支援 eSIM 嗎？</span><img src="assets/chev-down.svg" alt=""></div>
+                <p class="faq-a">購買前 App 會自動檢查你的裝置是否支援 eSIM；不支援的機型也能改選實體 SIM 卡方案。</p></button>
+              <button class="faq-item"><div class="faq-q"><span class="t14s">如何安裝與啟用 eSIM？</span><img src="assets/chev-down.svg" alt=""></div>
+                <p class="faq-a">購買完成後，在 App 內點擊「一鍵安裝」，依系統提示完成設定，抵達目的地即可啟用。</p></button>
+              <button class="faq-item"><div class="faq-q"><span class="t14s">流量用完或到期後會怎麼辦？</span><img src="assets/chev-down.svg" alt=""></div>
+                <p class="faq-a">可以在「我的 eSIM」直接加購流量或延長天數，不需重新安裝。</p></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="tabbar">
+      <div class="tabs">
+        <button class="tab on"><img src="assets/tab-home.svg" alt=""><span>首頁</span></button>
+        <button class="tab soon"><img src="assets/tab-esim.svg" alt=""><span>eSIM</span></button>
+        <button class="tab soon"><img src="assets/tab-me.svg" alt=""><span>我的</span></button>
+      </div>
+    </nav>
+  </section>
+
+  <!-- ================= AI CHAT ================= -->
+  <section id="chat" class="screen off-right" aria-label="WifiMi AI 旅遊助理">
+    <header class="chat-head">
+      <div class="bar">
+        <button id="back" aria-label="返回"><img class="icon24" src="assets/back.svg" alt=""></button>
+        <div class="title" id="chatTitle"><img src="assets/ai-title-icon.svg" alt="">WifiMi AI 旅遊助理</div>
+        <button id="menu" aria-label="選單"><img class="icon24" src="assets/menu.svg" alt=""></button>
+      </div>
+    </header>
+    <div class="chat-body" id="chatBody">
+      <div class="intro">
+        <h1>不知道怎麼選網路方案嗎？</h1>
+        <p>可以告訴我即將前往的國家、天數與日常使用習慣，協助您選擇最適合的方案！</p>
+      </div>
+      <div class="msgs" id="msgs"></div>
+    </div>
+
+    <div class="composer" id="composer">
+      <!-- text mode -->
+      <form class="ibar" id="textBar" autocomplete="off">
+        <input id="chatInput" type="text" enterkeyhint="send" placeholder="告訴 AI 你的行程，幫你選方案" aria-label="輸入你的行程">
+        <button type="button" class="mic" id="micBtn" aria-label="語音輸入"><img id="micIcon" src="assets/mic.svg" alt=""></button>
+      </form>
+      <!-- voice mode -->
+      <div class="ibar" id="voiceBar" hidden>
+        <div class="hold" id="holdArea">長按並說話</div>
+        <button type="button" class="mic" id="kbBtn" aria-label="改用鍵盤輸入"><img src="assets/keyboard.svg" alt=""></button>
+      </div>
+      <!-- recording -->
+      <div class="voice-panel" id="voicePanel" hidden>
+        <p id="voiceHint">鬆開以發送，向上滑動以取消</p>
+        <div class="wave" id="wave"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PLAN ================= -->
+  <section id="plan" class="screen page off-right" aria-label="商品方案">
+    <div class="scroll" id="planScroll">
+      <div class="plan-hero">
+        <div class="bg"><img src="assets/plan-header.svg" alt=""></div>
+        <button class="back-btn glass" data-back aria-label="返回"><img src="assets/back.svg" alt=""></button>
+        <div class="dest-title"><div class="b30"><img class="ring" src="assets/badge30-ring.svg" alt=""><div class="flag"><img class="fill" src="assets/badge30-jp.svg" alt=""></div></div><span>日本</span></div>
+        <button class="type-pill glass" id="typePill" aria-haspopup="true" aria-expanded="false"><span id="typeLabel">eSIM</span><img src="assets/chev-down-pill.svg" alt=""></button>
+        <div class="compat glass" id="compat" role="status"></div>
+      </div>
+      <div class="plan-body">
+        <div class="grp"><p class="lbl">選擇天數</p><div class="days" id="days"></div></div>
+        <div class="grp"><p class="lbl">選擇流量</p><div class="plans" id="plans"></div></div>
+        <div class="grp"><p class="lbl">產品詳情</p>
+          <div class="detail">
+            <div class="caps">
+              <div><img src="assets/cap-yes.svg" alt="">數據</div><div><img src="assets/cap-yes.svg" alt="">熱點</div>
+              <div><img src="assets/cap-no.svg" alt="">語音通話</div><div><img src="assets/cap-no.svg" alt="">簡訊</div>
+            </div>
+            <div class="feats" id="planFeats"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="type-menu" id="typeMenu" hidden>
+      <button data-type="esim">eSIM <small id="esimNote"></small></button>
+      <button data-type="sim">SIM卡</button>
+    </div>
+    <div class="bottombar">
+      <div class="sum"><b id="sumPrice"></b><span id="sumText"></span></div>
+      <button class="btn-primary" id="buyBtn">立即購買</button>
+    </div>
+  </section>
+
+  <!-- ================= CHECKOUT ================= -->
+  <section id="checkout" class="screen page off-right" aria-label="確認訂單">
+    <header class="whead"><div class="bar">
+      <button data-back aria-label="返回"><img class="icon24" src="assets/back.svg" alt=""></button>
+      <h2>確認訂單</h2>
+      <button class="soon" aria-label="客服"><img class="icon24" src="assets/head-right.svg" alt=""></button>
+    </div></header>
+    <div class="scroll" id="coScroll">
+      <div class="wbody">
+        <div class="box">
+          <div class="ttl" id="coTitle"></div>
+          <div class="feats muted" id="coFeats"></div>
+        </div>
+        <div class="box qty">
+          <h3>份數</h3>
+          <div class="r"><span class="amt" id="coAmt"></span>
+            <button id="qMinus" aria-label="減少"><img src="assets/minus.svg" alt=""></button>
+            <span class="n" id="qN">1</span>
+            <button id="qPlus" aria-label="增加"><img src="assets/plus.svg" alt=""></button>
+          </div>
+        </div>
+        <div class="box">
+          <h3>聯絡資料</h3>
+          <div class="field"><label for="coName">姓名</label><input id="coName" value="雲騰網絡" autocomplete="off"></div>
+          <div class="field"><label for="coMail">Email</label><input id="coMail" type="email" value="service@cwntgroup.com" autocomplete="off"></div>
+        </div>
+        <div class="box" id="pickupBox">
+          <h3>取貨方式</h3>
+          <div class="field"><label for="coPick">地點</label>
+            <div class="sel"><select id="coPick">
+              <option>桃園機場第一航廈自取</option><option>桃園機場第二航廈自取</option><option>松山機場自取</option>
+            </select><img src="assets/dropdown.svg" alt=""></div>
+          </div>
+        </div>
+        <div class="box">
+          <h3>付款方式</h3>
+          <div class="pays" id="pays">
+            <button class="pay on"><span class="pi"><img class="ic" src="assets/creditcard.svg" alt="">信用卡</span><span class="radio"></span></button>
+            <button class="pay"><span class="pi"><span class="ic"><img src="assets/applepay.png" alt="" style="position:absolute;left:0;right:0;top:4px;width:24px;aspect-ratio:208/138;object-fit:cover"></span>Apple Pay</span><span class="radio"></span></button>
+            <button class="pay"><span class="pi"><span class="ic"><img src="assets/linepay.png" alt="" style="position:absolute;left:3px;top:3px;width:17px;height:18px;object-fit:cover"></span>LINE Pay</span><span class="radio"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <button class="agree" id="agree"><span class="cbox on" id="agreeBox"></span><span>我已閱讀並同意<b>《服務條款》</b>及<b>《隱私權政策》</b></span></button>
+      <button class="btn-primary" id="payBtn">前往付款</button>
+    </div>
+  </section>
+
+  <!-- ================= SUCCESS ================= -->
+  <section id="success" class="screen page off-right" aria-label="訂單完成">
+    <header class="whead"><div class="bar">
+      <button id="doneBack" aria-label="回首頁"><img class="icon24" src="assets/back.svg" alt=""></button>
+      <h2>訂單完成</h2>
+      <button class="soon" aria-label="客服"><img class="icon24" src="assets/head-right.svg" alt=""></button>
+    </div></header>
+    <div class="scroll">
+      <div class="wbody">
+        <div class="box done">
+          <div class="big pop"><img src="assets/check-big.svg" alt=""></div>
+          <h1>購買成功</h1>
+          <p id="doneMsg"></p>
+        </div>
+        <div class="box">
+          <h3>商品明細</h3>
+          <div class="kvlist" id="doneKv"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar"><button class="btn-primary" id="doneBtn"></button></div>
+  </section>
+
+  <!-- ================= MY eSIM (inactive) ================= -->
+  <section id="myesim" class="screen page off-right" aria-label="我的 eSIM">
+    <div class="scroll" id="meScroll" style="padding-bottom:0">
+      <div class="me-hero" aria-hidden="true">
+        <div class="grad"></div>
+        <div class="art">
+          <div class="abs" style="left:69px;top:-37px;width:156px;height:156px"><div class="abs" style="inset:-294.87%"><img class="fill" src="assets/me-e1.svg" alt=""></div></div>
+          <div class="abs" style="left:183px;top:34px;width:139px;height:139px"><div class="abs" style="inset:-165.47%"><img class="fill" src="assets/me-e2.svg" alt=""></div></div>
+          <div class="abs" style="left:-43px;top:6px;width:147px;height:147px"><div class="abs" style="inset:-190.48%"><img class="fill" src="assets/me-e3.svg" alt=""></div></div>
+          <div class="abs" style="left:-43px;top:76px;width:445px;height:419px"><img class="fill" src="assets/me-e4.svg" alt=""></div>
+          <div class="abs" style="left:-51px;top:158px;width:146px;height:146px"><div class="abs" style="inset:-78.77%"><img class="fill" src="assets/me-e5.svg" alt=""></div></div>
+          <div class="abs" style="left:283px;top:369px;width:186px;height:186px"><div class="abs" style="inset:-123.66%"><img class="fill" src="assets/me-e6.svg" alt=""></div></div>
+          <div class="abs" style="left:65px;top:340px;width:211px;height:211px"><div class="abs" style="inset:-151.66%"><img class="fill" src="assets/me-e7.svg" alt=""></div></div>
+          <div class="abs" style="left:311px;top:97px;width:141px;height:141px"><div class="abs" style="inset:-141.84%"><img class="fill" src="assets/me-e8.svg" alt=""></div></div>
+          <div class="abs" style="left:248px;top:165px;width:290px;height:290px"><img class="fill" id="meE9" src="assets/me-e9.svg" alt=""></div>
+          <div class="abs flexc" style="left:-55.53px;top:181.76px;width:246.012px;height:246.012px"><div style="rotate:-123.81deg;scale:1 -1"><div style="position:relative;width:177.326px;height:177.326px"><img class="fill" src="assets/me-e10.svg" alt=""></div></div></div>
+          <div class="abs" style="left:284px;top:70px;width:54px;height:72px;border-radius:6px;background:linear-gradient(90deg,#fff,#E9E7FA);box-shadow:0 4px 16px rgba(115,102,191,.14)"></div>
+          <div class="abs" style="left:291px;top:80px;width:17px;height:15px;border-radius:2px;background:var(--yellow-500)"></div>
+        </div>
+        <div class="fade"></div>
+      </div>
+      <button class="back-btn glass me-back" id="meBack" aria-label="返回"><img src="assets/back.svg" alt=""></button>
+      <div class="me-body" id="meBody"></div>
+    </div>
+  </section>
+
+  <!-- ================= iOS system screens (install) ================= -->
+  <div id="ios" hidden>
+    <div id="iosAlertWrap" hidden>
+      <div class="ios-dim"></div>
+      <div class="ios-alert" role="alertdialog" aria-label="Activate Your eSIM">
+        <img src="assets/ios-alert.png" alt="Activate Your eSIM">
+        <button class="hot" id="alertCancel" style="left:14px;bottom:10px;width:128px;height:46px" aria-label="Cancel"></button>
+        <button class="hot" id="alertActivate" style="right:14px;bottom:10px;width:128px;height:46px" aria-label="Activate"></button>
+      </div>
+    </div>
+    <div class="ios-sheet" id="iosSheet" hidden>
+      <div class="ios-shot">
+        <img id="iosImg" src="assets/ios-activate.png" alt="">
+        <div id="hotActivate">
+          <button class="hot" id="sheetClose" style="left:16px;top:76px;width:44px;height:44px" aria-label="Close"></button>
+          <button class="hot" id="sheetContinue" style="left:38px;top:784px;width:326px;height:50px" aria-label="Continue"></button>
+        </div>
+        <div id="hotComplete" hidden>
+          <button class="hot" id="sheetDone" style="left:38px;top:785px;width:326px;height:50px" aria-label="Done"></button>
+        </div>
+        <div id="hotCellular" hidden>
+          <button class="hot" id="cellBack" style="left:16px;top:62px;width:44px;height:44px" aria-label="Back"></button>
+          <button class="hot" id="cellPrimary" style="left:16px;top:580px;width:370px;height:60px;border-radius:0" aria-label="Primary"></button>
+          <button class="hot" id="cellBusiness" style="left:16px;top:644px;width:370px;height:58px;border-radius:0" aria-label="Business"></button>
+        </div>
+      </div>
+      <div class="ios-busy" id="iosBusy" hidden><div class="spin"></div>Activating eSIM…</div>
+    </div>
+  </div>
+
+  <div class="paying" id="paying" hidden><div class="card"><div class="spin"></div>付款處理中…</div></div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <div class="staff" id="staff" hidden>
+    <div class="sheet">
+      <h3>工作人員選單</h3>
+      <button class="row" data-act="reset">重新開始 <small>回到首頁並清空對話</small></button>
+      <button class="row" data-act="result">直接看 AI 推薦結果 <small>跳過輸入</small></button>
+      <button class="row" data-act="plan">直接看商品方案 <small>裝置支援 eSIM</small></button>
+      <button class="row" data-act="planSim">直接看商品方案 <small>裝置不支援 eSIM（SIM 卡）</small></button>
+      <button class="row" data-act="install">直接看一鍵安裝 <small>我的 eSIM・未激活</small></button>
+      <button class="row" data-act="ok">直接看網路正常 <small>我的 eSIM・已激活</small></button>
+      <button class="row" data-act="error">直接看網路異常 <small>我的 eSIM・已激活</small></button>
+      <button class="row" data-act="idle">閒置自動重置 <small id="idleState">開（90 秒）</small></button>
+      <button class="close" data-act="close">關閉</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(() => {
+  const SCRIPT_TEXT = "我下週去日本 10 天，平常只會用社群媒體";
+  const AI_TEXT = "依你的行程（日本 10 天、需要即時上網），為你挑了 3 個方案。你也可以告訴我想要的流量大小，我再幫你調整。";
+  const IDLE_MS = 90000;
+
+  const $ = (id) => document.getElementById(id);
+  const device = $("device"), home = $("home"), chat = $("chat");
+  const msgs = $("msgs"), chatBody = $("chatBody"), input = $("chatInput");
+  let busy = false, timers = [];
+  const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+
+  // ---- desktop frame scaling ----
+  function fit() {
+    if (window.matchMedia("(min-width: 700px) and (min-height: 600px)").matches) {
+      const s = Math.min(1, (innerHeight - 48) / 874, (innerWidth - 48) / 402);
+      device.style.transform = `scale(${s})`;
+    } else device.style.transform = "";
+  }
+  addEventListener("resize", fit); fit();
+
+  // ---- iOS keyboard: keep the whole app (header included) inside the area above the keyboard ----
+  const vv = window.visualViewport, stage = $("stage");
+  function fitKeyboard() {
+    if (!vv) return;
+    stage.style.height = `${vv.height}px`;
+    stage.style.transform = vv.offsetTop ? `translateY(${vv.offsetTop}px)` : "";
+    if (document.activeElement === input) chatBody.scrollTop = chatBody.scrollHeight;
+  }
+  if (vv) { vv.addEventListener("resize", fitKeyboard); vv.addEventListener("scroll", fitKeyboard); }
+  // Safari still nudges the page when an input gets focus; snap it back so the header never leaves the screen.
+  document.addEventListener("focusin", () => setTimeout(() => { window.scrollTo(0, 0); fitKeyboard(); }, 50));
+  document.addEventListener("focusout", () => setTimeout(() => { window.scrollTo(0, 0); fitKeyboard(); }, 50));
+
+  // ---- toast ----
+  let toastT;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800); }
+  document.querySelectorAll(".soon").forEach(el => el.addEventListener("click", () => toast("這部分不在本次 Demo 範圍")));
+
+  // ---- KV: globe dots travel along their latitude lines ----
+  (() => {
+    // [cx, cy, rx, ry, rotation°, angular speed rad/s] for each line on the globe (from the Figma ellipses)
+    const LINES = [[349.07, 186.07, 114.71, 77.71, 67.94, 0.16], [348.95, 186.13, 114.75, 15.92, 41.84, -0.22],
+                   [348.93, 185.94, 114.94, 22.66, -21.36, 0.19], [348.94, 185.90, 114.94, 82.13, -52.99, -0.14]];
+    const at = ([cx, cy, rx, ry, deg], t) => { const r = deg * Math.PI / 180, x = rx * Math.cos(t), y = ry * Math.sin(t);
+      return [cx + x * Math.cos(r) - y * Math.sin(r), cy + x * Math.sin(r) + y * Math.cos(r)]; };
+    const dots = [...document.querySelectorAll('#kvSvg circle[r="1.41975"]')].map(c => {
+      const X = +c.getAttribute("cx"), Y = +c.getAttribute("cy"); let best = [1e9];
+      LINES.forEach((L, li) => { for (let i = 0; i < 720; i++) { const t = i / 720 * 2 * Math.PI, [x, y] = at(L, t), d = Math.hypot(x - X, y - Y); if (d < best[0]) best = [d, li, t]; } });
+      return { c, line: LINES[best[1]], t0: best[2] };
+    });
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const start = performance.now();
+    (function frame(now) {
+      const s = (now - start) / 1000;
+      for (const d of dots) { const [x, y] = at(d.line, d.t0 + d.line[5] * s); d.c.setAttribute("cx", x.toFixed(2)); d.c.setAttribute("cy", y.toFixed(2)); }
+      requestAnimationFrame(frame);
+    })(start);
+  })();
+
+  // ---- FAQ ----
+  $("faq").addEventListener("click", e => { const it = e.target.closest(".faq-item"); if (it) it.classList.toggle("open"); });
+
+  // ---- navigation ----
+  const stack = ["home"];
+  function push(id) {
+    $(stack[stack.length - 1]).classList.add("off-left");
+    const s = $(id); s.style.zIndex = stack.length + 1; s.classList.remove("off-right", "off-left");
+    stack.push(id);
+  }
+  function pop() {
+    if (stack.length < 2) return;
+    $(stack.pop()).classList.add("off-right");
+    $(stack[stack.length - 1]).classList.remove("off-left");
+  }
+  function goHome() {
+    while (stack.length > 1) { const s = $(stack.pop()); s.classList.remove("off-left"); s.classList.add("off-right"); }
+    home.classList.remove("off-left");
+  }
+  function openChat() { push("chat"); }
+  function closeChat() { input.blur(); pop(); }
+  document.querySelectorAll("[data-back]").forEach(b => b.addEventListener("click", () => { document.activeElement?.blur(); pop(); }));
+  $("openChat").addEventListener("click", openChat);
+  $("back").addEventListener("click", closeChat);
+  $("menu").addEventListener("click", () => toast("這部分不在本次 Demo 範圍"));
+
+  // ---- composer modes ----
+  const textBar = $("textBar"), voiceBar = $("voiceBar"), voicePanel = $("voicePanel");
+  function mode(m) { textBar.hidden = m !== "text"; voiceBar.hidden = m !== "voice"; voicePanel.hidden = m !== "rec"; }
+  function syncMicIcon() { $("micIcon").src = input.value.trim() ? "assets/send.svg" : "assets/mic.svg"; $("micBtn").setAttribute("aria-label", input.value.trim() ? "送出" : "語音輸入"); }
+  input.addEventListener("input", syncMicIcon);
+  $("micBtn").addEventListener("click", () => {
+    if (input.value.trim()) send(input.value.trim());
+    else { input.blur(); mode("voice"); }
+  });
+  textBar.addEventListener("submit", e => { e.preventDefault(); if (input.value.trim()) send(input.value.trim()); });
+  $("kbBtn").addEventListener("click", () => { mode("text"); input.focus(); });
+
+  // waveform bars from the Figma heights
+  [6,10,14,22,30,36,26,16,10,8,12,20,32,38,28,18,10,8,14,24,34,28,16,10,6,12,8,6].forEach((h, i) => {
+    const b = document.createElement("i"); b.style.height = h + "px"; b.style.animationDelay = (-(i * 0.13) % .9) + "s"; $("wave").appendChild(b);
+  });
+
+  // press-and-hold voice
+  let holdY = null, cancelled = false;
+  const hold = $("holdArea");
+  hold.addEventListener("pointerdown", e => {
+    if (busy) return;
+    e.preventDefault(); holdY = e.clientY; cancelled = false;
+    try { hold.setPointerCapture(e.pointerId); } catch (_) {}
+    voicePanel.classList.remove("cancel"); $("voiceHint").textContent = "鬆開以發送，向上滑動以取消";
+    mode("rec");
+    if (navigator.vibrate) navigator.vibrate(15);
+  });
+  hold.addEventListener("pointermove", e => {
+    if (holdY === null) return;
+    const up = holdY - e.clientY > 70;
+    if (up !== cancelled) { cancelled = up; voicePanel.classList.toggle("cancel", up); $("voiceHint").textContent = up ? "鬆開以取消" : "鬆開以發送，向上滑動以取消"; }
+  });
+  const endHold = () => {
+    if (holdY === null) return;
+    holdY = null; mode("voice");
+    if (!cancelled) send(SCRIPT_TEXT);
+  };
+  hold.addEventListener("pointerup", endHold);
+  hold.addEventListener("pointercancel", () => { cancelled = true; endHold(); });
+
+  // ---- conversation ----
+  function scrollDown() { chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" }); }
+  function el(html) { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstChild; }
+
+  function send(text) {
+    if (busy) return;
+    busy = true; input.value = ""; syncMicIcon(); input.blur(); mode("text");
+    const row = el(`<div class="u-row rise"><div class="bubble"></div></div>`);
+    row.firstChild.textContent = text; msgs.appendChild(row);
+    const think = el(`<div class="think rise" style="margin-top:-6px"><div class="bubble"><div class="ds"><i></i><i></i><i></i><i></i></div></div><p>AI 正在思考中…</p></div>`);
+    later(() => { msgs.appendChild(think); scrollDown(); }, 350);
+    later(() => { think.remove(); answer(); }, 2300);
+    scrollDown();
+  }
+
+  function answer() {
+    const ai = el(`<div class="ai"><p class="ai-text"></p></div>`);
+    msgs.appendChild(ai);
+    const p = ai.firstChild; let i = 0;
+    const step = () => {
+      p.textContent = AI_TEXT.slice(0, ++i);
+      if (i < AI_TEXT.length) later(step, 28); else showCards(ai);
+    };
+    step();
+  }
+
+  function showCards(ai) {
+    const main = el(`<button class="pcard rise next" data-plan="unl" data-days="10" data-type="esim">
+        <img class="illu" src="assets/product-lg.svg" alt="">
+        <div class="info">
+          <span class="gtag">最推薦</span>
+          <p class="name">日本 10 天｜不限量（降速）</p>
+          <p class="sub">4G/5G 高速 · 可熱點分享</p>
+          <p class="price">NT$ 780</p>
+        </div></button>`);
+    const also = el(`<div class="also rise" style="animation-delay:.25s">
+        <p class="also-h">你可能也會喜歡</p>
+        <div>
+          <button class="rcard next" data-plan="10" data-days="10" data-type="sim"><img src="assets/product-sm.svg" alt=""><div class="info"><p class="t14s">日本 10 天｜10GB</p><p class="t12" style="color:var(--gray-700)">達量後 512kbps</p></div><span class="price">NT$ ${priceFor(PLANS.sim[4], 10)}</span></button>
+          <button class="rcard next" data-plan="5" data-days="5" data-type="sim"><img src="assets/product-sm.svg" alt=""><div class="info"><p class="t14s">日本 5 天｜5GB</p><p class="t12" style="color:var(--gray-700)">4G/5G 高速 · 可熱點分享</p></div><span class="price">NT$ ${priceFor(PLANS.sim[3], 5)}</span></button>
+        </div></div>`);
+    ai.appendChild(main); ai.appendChild(also);
+    ai.querySelectorAll(".next").forEach(b => b.addEventListener("click", () => openPlan(b.dataset.plan, +b.dataset.days, b.dataset.type)));
+    busy = false;
+    later(scrollDown, 60);
+  }
+
+  // ---- plan selection ----
+  const DAYS = [1, 2, 3, 4, 5, 7, 10, 15];
+  const PLANS = {
+    esim: [
+      { id: "unl", name: "不限流量", tag: ["best", "最推薦"], desc: "不降速，無FUP", price: 780 },
+      { id: "fup", name: "無限流量吃到飽", tag: ["pop", "最多人選"], desc: "須遵守FUP", price: 700 },
+      { id: "3", name: "3GB", desc: "可儲值流量", price: 185 },
+      { id: "5", name: "5GB", desc: "可儲值流量", price: 265 },
+      { id: "10", name: "10GB", desc: "可儲值流量", price: 316 },
+      { id: "20", name: "20GB", desc: "可儲值流量", price: 500 },
+    ],
+    sim: [
+      { id: "unl", name: "不限流量", tag: ["best", "最推薦"], desc: "不降速，無FUP", price: 720 },
+      { id: "fup", name: "無限流量吃到飽", tag: ["pop", "最多人選"], desc: "須遵守FUP", price: 650 },
+      { id: "3", name: "3GB", desc: "可儲值流量", price: 110 },
+      { id: "5", name: "5GB", desc: "可儲值流量", price: 180 },
+      { id: "10", name: "10GB", desc: "可儲值流量", price: 220 },
+      { id: "20", name: "20GB", desc: "可儲值流量", price: 400 },
+    ],
+  };
+  // [color icon, gray icon, text, has chevron]; the last two rows are eSIM only
+  const FEATS = [
+    ["f-clock", "g-clock", "由訂單日期起計 60 日內有效"], ["f-globe", "g-globe", "5G 網絡", 1],
+    ["f-activate", "g-activate", "在目的地聯網激活"], ["f-antenna", "g-antenna", "資源類型：漫遊", 1],
+    ["f-pin", "g-pin", "IP 位址：香港 / 新加坡", 1], ["f-db", "g-db", "支援續訂"], ["f-chart", "g-chart", "支援 App 內流量追蹤", 1],
+  ];
+  let deviceEsim = true;
+  const sel = { type: "esim", plan: "unl", days: 10, qty: 1 };
+  const curPlan = () => PLANS[sel.type].find(p => p.id === sel.plan);
+  const isGB = (p) => /GB$/.test(p.name);
+  const typeName = () => sel.type === "esim" ? "eSIM" : "實體SIM卡";
+  const volName = (p) => isGB(p) ? `總量${p.name}` : p.name;
+  const feats = (type, gray) => FEATS.slice(0, type === "esim" ? 7 : 5).map(([c, g, t, chev]) =>
+    `<div class="feat"><img src="assets/${gray ? g : c}.svg" alt=""><span>${t}</span>${chev && !gray ? '<img src="assets/f-chev.svg" alt="">' : ""}</div>`).join("");
+
+  let compatT;
+  // The recommended card opens the eSIM flow; the two "你可能也會喜歡" cards open the SIM-card flow.
+  function openPlan(planId = "unl", days = 10, type = "esim") {
+    deviceEsim = type === "esim";
+    sel.type = type; sel.plan = planId; sel.days = days; sel.qty = 1;
+    $("planScroll").scrollTop = 0; renderPlan();
+    const c = $("compat");
+    c.innerHTML = `<span class="spin"></span>正在檢查裝置相容性…`;
+    clearTimeout(compatT);
+    compatT = setTimeout(() => {
+      c.innerHTML = deviceEsim
+        ? `<span class="verify ok pop"><img src="assets/verify-ok.svg" alt=""></span>本裝置支援使用 eSIM`
+        : `<span class="verify no pop"><img src="assets/verify-no.svg" alt=""></span>本裝置不支援使用 eSIM`;
+    }, 1100);
+    if (stack[stack.length - 1] !== "plan") push("plan");
+  }
+  // Figma prices are for 10 days; other durations scale by (days/10)^0.6, kept within NT$20–1000.
+  const priceFor = (p, days = sel.days) => days === 10 ? p.price : Math.max(20, Math.min(1000, Math.round(p.price * Math.pow(days / 10, 0.6))));
+  // Builds the lists; only called when the screen opens or the eSIM/SIM type changes.
+  function renderPlan() {
+    $("typeLabel").textContent = sel.type === "esim" ? "eSIM" : "SIM卡";
+    $("days").innerHTML = DAYS.map(d => `<button data-d="${d}">${d}天</button>`).join("");
+    $("plans").innerHTML = PLANS[sel.type].map(p => `<button class="plan" data-p="${p.id}">
+        <span class="radio"></span>
+        <span class="info"><span class="nm">${p.name}${p.tag ? `<span class="ptag ${p.tag[0]}">${p.tag[1]}</span>` : ""}</span><span class="ds">${p.desc}</span></span>
+        <span class="pr"></span></button>`).join("");
+    $("planFeats").innerHTML = feats(sel.type, false);
+    updatePlan();
+  }
+  // Updates selection, prices and summary in place, so nothing in the list re-draws.
+  function updatePlan() {
+    $("days").querySelectorAll("[data-d]").forEach(b => b.classList.toggle("on", +b.dataset.d === sel.days));
+    $("plans").querySelectorAll("[data-p]").forEach(b => {
+      const p = PLANS[sel.type].find(x => x.id === b.dataset.p);
+      b.classList.toggle("on", p.id === sel.plan);
+      b.querySelector(".pr").textContent = `NT$ ${priceFor(p)}`;
+    });
+    const p = curPlan();
+    $("sumPrice").textContent = `NT$ ${priceFor(p)}`;
+    $("sumText").textContent = isGB(p) ? `${sel.days}天｜${sel.type === "esim" ? "總量" : ""}${p.name}` : p.name;
+  }
+  $("days").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (b) { sel.days = +b.dataset.d; updatePlan(); } });
+  $("plans").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (b) { sel.plan = b.dataset.p; updatePlan(); } });
+
+  const typeMenu = $("typeMenu"), typePill = $("typePill");
+  function toggleTypeMenu(open) {
+    typeMenu.hidden = !open; typePill.setAttribute("aria-expanded", open);
+    typeMenu.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.type === sel.type));
+    $("esimNote").textContent = deviceEsim ? "" : "本裝置不支援";
+  }
+  typePill.addEventListener("click", () => toggleTypeMenu(typeMenu.hidden));
+  typeMenu.addEventListener("click", e => {
+    const b = e.target.closest("[data-type]"); if (!b) return;
+    if (b.dataset.type === "esim" && !deviceEsim) { toast("本裝置不支援 eSIM，請選擇 SIM 卡"); return; }
+    sel.type = b.dataset.type; toggleTypeMenu(false); renderPlan();
+  });
+  $("plan").addEventListener("click", e => { if (!typeMenu.hidden && !e.target.closest("#typeMenu, #typePill")) toggleTypeMenu(false); });
+
+  // ---- checkout ----
+  const sepHtml = `<span class="sp"><img src="assets/sep.svg" alt=""></span>`;
+  function renderQty() {
+    $("qN").textContent = sel.qty; $("qMinus").disabled = sel.qty <= 1;
+    $("coAmt").textContent = `NT$ ${priceFor(curPlan()) * sel.qty}`;
+  }
+  $("buyBtn").addEventListener("click", () => {
+    const p = curPlan();
+    $("coTitle").innerHTML = ["日本", `${sel.days} 天`, volName(p), typeName()].map(t => `<span>${t}</span>`).join(sepHtml);
+    $("coFeats").innerHTML = feats(sel.type, true);
+    $("pickupBox").hidden = sel.type !== "sim";
+    sel.qty = 1; renderQty();
+    $("coScroll").scrollTop = 0;
+    push("checkout");
+  });
+  $("qMinus").addEventListener("click", () => { if (sel.qty > 1) { sel.qty--; renderQty(); } });
+  $("qPlus").addEventListener("click", () => { if (sel.qty < 9) { sel.qty++; renderQty(); } });
+  $("pays").addEventListener("click", e => { const b = e.target.closest(".pay"); if (!b) return; $("pays").querySelectorAll(".pay").forEach(x => x.classList.toggle("on", x === b)); });
+  $("agree").addEventListener("click", () => { const on = $("agreeBox").classList.toggle("on"); $("payBtn").disabled = !on; });
+  $("payBtn").addEventListener("click", () => {
+    document.activeElement?.blur();
+    $("paying").hidden = false;
+    later(() => { $("paying").hidden = true; showSuccess(); }, 1500);
+  });
+
+  // ---- success ----
+  function showSuccess() {
+    const p = curPlan(), esim = sel.type === "esim";
+    $("doneMsg").textContent = esim ? "現在即可前往安裝您的eSIM" : `請前往${$("coPick").value}領取您的SIM卡`;
+    const rule = isGB(p) ? `總量 ${p.name}，用完即停止` : p.id === "unl" ? "不限流量，不降速" : "無限流量，須遵守 FUP";
+    $("doneKv").innerHTML = [
+      ["商品名稱", ["日本", `${sel.days} 天`, volName(p), typeName()].join("｜")], ["使用天數", `${sel.days} 天`],
+      ["流量規則", rule], ["網路覆蓋", "日本"], ["電信商", "KDDI (5G)"],
+    ].map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join("");
+    $("doneBtn").textContent = esim ? "前往安裝" : "回首頁";
+    const big = document.querySelector("#success .big"); big.classList.remove("pop"); void big.offsetWidth; big.classList.add("pop");
+    push("success");
+  }
+  $("doneBtn").addEventListener("click", () => { if (sel.type === "esim") openMyEsim(); else reset(); });
+
+  // ---- my eSIM (inactive) + one-tap install ----
+  const ruleText = (p) => isGB(p) ? `總量 ${p.name}，用完即停止` : p.id === "unl" ? "不限流量，不降速" : "無限流量，須遵守 FUP";
+  // state: "inactive" | "ok" | "error"
+  const STATUS = { inactive: ["", "dot-gray", "未激活"], ok: ["ok", "dot-green", "網路正常"], error: ["err", "dot-red", "網路異常"] };
+  const md = (d) => `${d.getMonth() + 1}/${String(d.getDate()).padStart(2, "0")}`;
+  const kv = (rows) => `<div class="kvlist">${rows.map(([k, v, bad]) => `<div><span>${k}</span><span${bad ? ' class="bad"' : ""}>${v}</span></div>`).join("")}</div>`;
+  function renderMyEsim(state) {
+    meState = state;
+    const p = curPlan(), active = state !== "inactive";
+    const start = new Date(); if (active) start.setDate(start.getDate() - 2);
+    const end = new Date(start); end.setDate(start.getDate() + sel.days - 1);
+    const total = isGB(p) ? parseInt(p.name) : 0;
+    const usedPct = total ? Math.min(100, 2 / total * 100) : 23;
+    const [cls, dot, label] = STATUS[state];
+    $("meE9").src = `assets/${state === "ok" ? "me-e9-ok" : state === "error" ? "me-e9-err" : "me-e9"}.svg`;
+    const card = `<div class="ecard">
+        <div class="top"><div class="ttl">${["日本", `${sel.days} 天`, volName(p)].map(t => `<span>${t}</span>`).join(sepHtml)}</div>
+          <span class="estatus ${cls} pop"><img src="assets/${dot}.svg" alt="">${label}</span></div>
+        <div class="stats">
+          <div><small>剩餘天數</small><span>${active ? `${Math.max(1, sel.days - 3)} 天` : "--"}</span></div>
+          <div><small>使用期間</small><span>${md(start)} - ${md(end)}</span></div>
+          <div><small>電信商</small><span>KDDI</span></div>
+        </div>
+        <div class="usage"><div class="track">${active ? `<i data-w="${usedPct}%" style="width:0"></i>` : ""}</div>
+          <div class="row">${active ? `<span>已用流量</span><b>2 GB / ${total ? total + " GB" : "不限量"}</b>` : "<span>尚未啟用</span><span>-- / --</span>"}</div></div>
+        <div class="eacts">${active ? '<button class="install" data-soon>加購流量</button>' : '<button class="install" id="installBtn">一鍵安裝</button>'}<button data-soon>轉贈流量</button></div>
+      </div>`;
+    const days = [1.0, 0.7, 0.3].map((gb, i) => { const d = new Date(start); d.setDate(start.getDate() + i);
+      return `<div class="day"><span>${md(d)}</span><span class="t"><i data-w="${gb * 86}%" style="width:0"></i></span><span>${gb.toFixed(1)} GB</span></div>`; }).join("");
+    const fix = `<div class="sec-card fix"><div class="top">
+        <div class="h"><img src="assets/s-warn.svg" alt="">排除異常</div>
+        <div class="checks">
+          <div class="check"><span class="v ok"><img src="assets/chk-ok.svg" alt=""></span>eSIM 已安裝</div>
+          <div class="check"><span class="v ok"><img src="assets/chk-ok.svg" alt=""></span>行動數據已開啟</div>
+          <div class="check bad"><span class="v no"><img src="assets/chk-no.svg" alt=""></span>數據漫遊未開啟</div>
+        </div>
+        <div class="fix-steps"><b>開啟步驟</b><p>1. 前往「設定」→「行動網路」</p><p>2. 選擇此 eSIM 方案</p><p>3. 開啟「數據漫遊」後回到 App 重新檢查</p></div></div>
+        <div class="cta"><button class="btn-red" id="recheck">我已開啟，重新檢查</button>
+          <p class="support">仍無法連線？<u data-soon>聯絡 Line@ 官方客服</u></p></div></div>`;
+    const sec = (icon, title, inner, tag) => `<div class="sec-card"><div class="h"><img src="assets/${icon}.svg" alt="">${title}${tag || ""}</div>${inner}</div>`;
+    $("meBody").innerHTML = card + `<div class="secs">
+      ${state === "error" ? fix : ""}
+      ${active ? "" : sec("s-help", "如何啟用", '<div class="steps-txt muted"><p>1. 點擊「一鍵安裝」，於系統設定內完成激活流程</p><p>2. 抵達目的地後，於系統設定內打開數據漫遊</p><p>3. 啟用後偵測到該地電信商，即可連線上網</p></div>')}
+      ${sec("s-usage", "使用明細", active ? `<div class="days-used">${days}</div>` : '<p class="muted">尚未使用任何網路流量</p>')}
+      ${sec("s-plan", "方案詳情", kv([["使用天數", `${sel.days} 天（從啟用日起計算）`], ["流量規則", ruleText(p)], ["網路覆蓋", "日本"], ["電信商", "KDDI (5G)"]]))}
+      ${sec("s-net", "網路狀態", kv([["網路訊號", "強"], ["資料連線", "已開啟"], ["數據漫遊", state === "error" ? "未開啟" : "已開啟", state === "error"], ["網路模式", "5G 優先"], ["偵測裝置", "iPhone 17 Pro"]]))}
+      ${sec("s-gift", "轉贈流量", '<p class="muted">將未使用的流量轉贈給親友，正式上架後開放。</p>', '<span class="soon-tag">即將推出</span>')}
+    </div>`;
+    requestAnimationFrame(() => requestAnimationFrame(() => $("meBody").querySelectorAll("i[data-w]").forEach(i => i.style.width = i.dataset.w)));
+  }
+  let meState = "inactive";
+  $("meBack").addEventListener("click", () => meState === "inactive" ? pop() : reset());
+  function openMyEsim() { renderMyEsim("inactive"); $("meScroll").scrollTop = 0; push("myesim"); }
+  $("meBody").addEventListener("click", e => {
+    if (e.target.closest("[data-soon]")) return toast("這部分不在本次 Demo 範圍");
+    if (e.target.closest("#installBtn")) { ios.hidden = false; sheet.hidden = true; $("iosAlertWrap").hidden = false; return; }
+    const r = e.target.closest("#recheck");
+    if (r && !r.disabled) {
+      r.disabled = true; r.innerHTML = '<span class="spin"></span>檢查中…';
+      later(() => { renderMyEsim("ok"); $("meScroll").scrollTo({ top: 0, behavior: "smooth" }); toast("已偵測到網路，連線正常"); }, 1600);
+    }
+  });
+
+  const ios = $("ios"), sheet = $("iosSheet");
+  function iosStep(step, anim) {
+    $("iosImg").src = `assets/ios-${step}.png`;
+    $("hotActivate").hidden = step !== "activate";
+    $("hotComplete").hidden = step !== "complete";
+    $("hotCellular").hidden = step !== "cellular";
+    sheet.style.background = step === "cellular" ? "#F2F2F7" : "#fff";
+    sheet.hidden = false; sheet.classList.remove("up", "push"); void sheet.offsetWidth;
+    if (anim) sheet.classList.add(anim);
+  }
+  function closeIos() { ios.hidden = true; $("iosAlertWrap").hidden = true; sheet.hidden = true; $("iosBusy").hidden = true; }
+  $("alertCancel").addEventListener("click", closeIos);
+  $("alertActivate").addEventListener("click", () => { $("iosAlertWrap").hidden = true; iosStep("activate", "up"); });
+  $("sheetClose").addEventListener("click", closeIos);
+  $("sheetContinue").addEventListener("click", () => {
+    $("iosBusy").hidden = false;
+    later(() => { $("iosBusy").hidden = true; iosStep("complete"); }, 1600);
+  });
+  $("sheetDone").addEventListener("click", () => iosStep("cellular", "push"));
+  $("cellBack").addEventListener("click", () => toast("點選「Primary」或「Business」回到 WifiMi"));
+  // Primary → network OK ending, Business → network error ending
+  const backToApp = (state) => { closeIos(); renderMyEsim(state); $("meScroll").scrollTop = 0; };
+  $("cellPrimary").addEventListener("click", () => backToApp("ok"));
+  $("cellBusiness").addEventListener("click", () => backToApp("error"));
+  $("doneBack").addEventListener("click", reset);
+
+  // ---- staff menu & reset ----
+  function reset() {
+    clearTimers(); busy = false; msgs.innerHTML = ""; input.value = ""; syncMicIcon(); mode("text");
+    chatBody.scrollTop = 0; $("homeScroll").scrollTop = 0;
+    document.querySelectorAll(".faq-item").forEach((f, i) => f.classList.toggle("open", i === 0));
+    clearTimeout(compatT); $("paying").hidden = true; toggleTypeMenu(false); closeIos();
+    $("agreeBox").classList.add("on"); $("payBtn").disabled = false; $("coPick").selectedIndex = 0;
+    $("pays").querySelectorAll(".pay").forEach((x, i) => x.classList.toggle("on", i === 0));
+    $("coName").value = "雲騰網絡"; $("coMail").value = "service@cwntgroup.com";
+    input.blur(); goHome();
+  }
+  function longPress(node, fn) {
+    let t;
+    node.addEventListener("pointerdown", () => { t = setTimeout(fn, 900); });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(ev => node.addEventListener(ev, () => clearTimeout(t)));
+  }
+  const staff = $("staff");
+  longPress($("logo"), () => staff.hidden = false);
+  longPress($("chatTitle"), () => staff.hidden = false);
+  let idleOn = true;
+  staff.addEventListener("click", e => {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (!act && e.target === staff) { staff.hidden = true; return; }
+    if (act === "reset") { reset(); staff.hidden = true; }
+    if (act === "result") { reset(); staff.hidden = true; openChat(); later(() => send(SCRIPT_TEXT), 450); }
+    if (act === "plan") { reset(); staff.hidden = true; later(() => openPlan("unl", 10, "esim"), 50); }
+    if (act === "planSim") { reset(); staff.hidden = true; later(() => openPlan("10", 10, "sim"), 50); }
+    if (["install", "ok", "error"].includes(act)) {
+      reset(); staff.hidden = true; sel.type = "esim"; sel.plan = "unl"; sel.days = 10;
+      later(() => act === "install" ? openMyEsim() : (renderMyEsim(act), $("meScroll").scrollTop = 0, push("myesim")), 50);
+    }
+    if (act === "idle") { idleOn = !idleOn; $("idleState").textContent = idleOn ? "開（90 秒）" : "關"; }
+    if (act === "close") staff.hidden = true;
+  });
+
+  // ---- idle auto-reset ----
+  let idleT;
+  const bump = () => { clearTimeout(idleT); idleT = setTimeout(() => { if (idleOn && staff.hidden) reset(); }, IDLE_MS); };
+  ["pointerdown", "keydown", "scroll", "input"].forEach(ev => addEventListener(ev, bump, { capture: true, passive: true }));
+  bump();
+
+  document.addEventListener("contextmenu", e => e.preventDefault());
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+
+</body>
+</html>
