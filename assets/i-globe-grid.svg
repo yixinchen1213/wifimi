@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24.1" height="24.55" viewBox="0 0 24.1 24.55" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="globe-grid">
+<path id="Vector" d="M12.05 23.975C15.0876 23.975 17.55 18.7367 17.55 12.275C17.55 5.81327 15.0876 0.575 12.05 0.575C9.01243 0.575 6.55 5.81327 6.55 12.275C6.55 18.7367 9.01243 23.975 12.05 23.975Z" fill="url(#paint0_linear_0_818)" stroke-width="1.15" stroke="#D5D5EC"/>
+<path id="Vector_2" d="M0.55 12.275H23.55M2.65 5.075C7.75 7.975 16.35 7.975 21.45 5.075M2.65 19.475C7.75 16.575 16.35 16.575 21.45 19.475" stroke-width="1.1" stroke-linecap="round" stroke="white" stroke-opacity="0.8"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_818" x1="4.05" y1="1.275" x2="19.05" y2="20.275" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0.56"/>
+<stop offset="0.5" stop-color="#D5D5EC" stop-opacity="0.24"/>
+<stop offset="1" stop-color="#9E9DD3" stop-opacity="0.04"/>
+</linearGradient>
+</defs>
+</svg>
