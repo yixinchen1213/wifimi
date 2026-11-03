@@ -1,4 +1,4 @@
-const CACHE = "wifimi-demo-fa2f14f158";
+const CACHE = "wifimi-demo-494e1545f8";
 const FILES = [
  "./",
  "assets/ai-sparkle.svg",

@@ -29,6 +29,7 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
   --card-shadow: 0 4px 10px rgba(69,69,115,.06);
   --font: "Lato", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
   --sb: 10px;
+  --k: 1; --kc: 1; --ks: 1; /* art scale vs the 402pt design width (set in JS); kc never shrinks, ks also fits the height */
   color-scheme: light;
 }
 html, body { height: 100%; margin: 0; }
@@ -65,12 +66,12 @@ img { display: block; }
 .home-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .home-scroll::-webkit-scrollbar { display: none; }
 .home-inner { position: relative; padding: var(--sb) 16px 107px; } /* last card sits 24px above the tab bar */
-.kv { position: absolute; left: 0; right: 0; top: calc(var(--sb) - 62px); height: 301px; overflow: hidden; pointer-events: none; }
+.kv { position: absolute; left: 0; right: 0; top: calc(var(--sb) - 62px); height: calc(301px * var(--k)); overflow: hidden; pointer-events: none; }
 .kv-bg { position: absolute; inset: 0;
   background-image: linear-gradient(119.08deg, #fff 4.92%, #E9E6FF 42.38%, #D8D3FF 61.55%, #A09EDC 88.07%, #7473C0 107.26%),
     linear-gradient(117.62deg, rgba(116,115,192,0) 47.87%, rgba(116,115,192,.18) 103.13%),
     linear-gradient(101.64deg, #F5F3FF .33%, #E9E6FF 54.74%, #D8D3FF 99.8%); }
-.kv-svg { position: absolute; top: 0; left: 50%; width: 402px; height: 301px; margin-left: -201px; }
+.kv-svg { position: absolute; top: 0; left: 50%; width: 402px; height: 301px; margin-left: -201px; transform: scale(var(--k)); transform-origin: top center; }
 .abs { position: absolute; }
 .fill { position: absolute; inset: 0; width: 100%; height: 100%; }
 .m230 { -webkit-mask: url(assets/kv-mask.svg) no-repeat; mask: url(assets/kv-mask.svg) no-repeat;
@@ -220,7 +221,7 @@ img { display: block; }
   box-shadow: 1.25px 0 0 -.75px #d0d0d0, -1.25px 0 0 -.75px #d0d0d0, 0 0 0 .5px #e8e8e8, 0 8px 15px rgba(0,0,0,.02); }
 .plan-hero { position: relative; height: calc(138px + var(--sb)); }
 .plan-hero .bg { position: absolute; left: 0; right: 0; top: calc(var(--sb) - 62px); height: 200px; overflow: hidden; }
-.plan-hero .bg img { position: absolute; left: 50%; width: 402px; height: 200px; margin-left: -201px; }
+.plan-hero .bg img { position: absolute; left: 50%; width: 402px; height: 200px; margin-left: -201px; transform: scale(var(--kc)); transform-origin: top center; }
 .back-btn { position: absolute; left: 12px; top: var(--sb); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .back-btn img { width: 24px; height: 24px; margin-left: -2px; }
 .dest-title { position: absolute; left: 68px; top: calc(var(--sb) + 7px); display: flex; gap: 6px; align-items: flex-start; color: #fff; font: 600 22px/28px "Noto Sans TC", sans-serif; letter-spacing: .44px; }
@@ -305,6 +306,13 @@ img { display: block; }
 .field .sel { position: relative; }
 .field .sel select { color: var(--purple-800); padding-right: 40px; }
 .field .sel img { position: absolute; right: 12px; top: 50%; margin-top: -12px; width: 24px; height: 24px; pointer-events: none; }
+.kmap { position: relative; height: 180px; border-radius: 8px; overflow: hidden; border: 1px solid #EEE; background: #F4F4FA; }
+.kmap svg { display: block; width: 100%; height: 100%; }
+.kmap [data-k] { cursor: pointer; }
+.kmap .note { position: absolute; right: 6px; bottom: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.85); font: 400 10px/16px var(--font); color: var(--gray-700); }
+.kinfo { display: flex; gap: 6px; align-items: center; margin-top: -2px; font: 400 14px/22px var(--font); color: var(--purple-800); }
+.kinfo b { font-weight: 600; }
+.kinfo span:last-child { color: var(--gray-600); margin-left: -6px; }
 .pays { display: flex; flex-direction: column; gap: 10px; }
 .pay { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 8px; border: 1px solid #EEE; text-align: left; width: 100%; font: 400 14px/22px var(--font); }
 .pay.on { border: 2px solid var(--purple-400); padding: 11px; }
@@ -330,7 +338,7 @@ img { display: block; }
 
 /* ---------- My eSIM ---------- */
 .me-hero { position: absolute; left: 0; right: 0; top: calc(var(--sb) - 62px); height: 439px; overflow: hidden; pointer-events: none; }
-.me-hero .art { position: absolute; top: 0; left: 50%; width: 402px; height: 439px; margin-left: -201px; }
+.me-hero .art { position: absolute; top: 0; left: 50%; width: 402px; height: 439px; margin-left: -201px; transform: scale(var(--k)); transform-origin: top center; }
 .me-hero .grad { position: absolute; left: -100vw; right: -100vw; top: 0; height: 573px;
   background: linear-gradient(118.98deg, #C6C3F9 4.53%, #A9A4F0 23.82%, #7473C0 65.7%, #6968B2 90.1%, #55549C 99.82%); }
 .me-hero .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 145px; background: linear-gradient(180deg, rgba(241,241,249,0), var(--purple-100)); }
@@ -403,8 +411,15 @@ img { display: block; }
 .ios-sheet.push { animation: pushin .38s cubic-bezier(.32,.72,0,1) both; }
 @keyframes sheetup { from { transform: translateY(100%); } }
 @keyframes pushin { from { transform: translateX(100%); } }
-.ios-shot { position: absolute; left: 50%; top: calc(var(--sb) - 62px); width: 402px; height: 874px; margin-left: -201px; }
+.ios-shot { position: absolute; left: 50%; top: calc((var(--sb) - 62px) * var(--ks)); width: 402px; height: 874px; margin-left: -201px; transform: scale(var(--ks)); transform-origin: top center; }
 .ios-shot > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+/* Wider than the screenshot: extend its colours to both sides (gray backdrop strip + square-topped white sheet, or Settings gray) */
+.ios-sheet[data-step="cellular"] { background: #F2F2F6; }
+/* cover the screenshot's edges (incl. its baked-in scroll bar) so it blends into the side fill */
+.ios-sheet[data-step="cellular"] .ios-shot::before, .ios-sheet[data-step="cellular"] .ios-shot::after { content: ""; position: absolute; top: 0; bottom: 0; width: 13px; background: #F2F2F6; pointer-events: none; }
+.ios-sheet[data-step="cellular"] .ios-shot::before { left: 0; } .ios-sheet[data-step="cellular"] .ios-shot::after { right: 0; }
+.ios-sheet[data-step="activate"], .ios-sheet[data-step="complete"] { background: linear-gradient(#C1C1C5 0 calc(var(--sb) * var(--ks)), #fff 0); }
+.ios-sheet[data-step="activate"] .ios-shot > img, .ios-sheet[data-step="complete"] .ios-shot > img { clip-path: inset(62px 0 0 0 round 48px 48px 0 0); }
 .ios-busy { position: absolute; inset: 0; background: rgba(255,255,255,.7); display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center;
   font: 500 15px/22px -apple-system, system-ui, sans-serif; color: #3C3C43; }
 .ios-busy .spin { width: 28px; height: 28px; border-width: 3px; border-color: #D1D1D6; border-top-color: #8E8E93; }
@@ -809,11 +824,11 @@ img { display: block; }
         </div>
         <div class="box" id="pickupBox">
           <h3>取貨方式</h3>
-          <div class="field"><label for="coPick">地點</label>
-            <div class="sel"><select id="coPick">
-              <option>桃園機場第一航廈自取</option><option>桃園機場第二航廈自取</option><option>松山機場自取</option>
-            </select><img src="assets/dropdown.svg" alt=""></div>
+          <div class="field"><label for="coPick">WifiMi Kiosk</label>
+            <div class="sel"><select id="coPick"></select><img src="assets/dropdown.svg" alt=""></div>
           </div>
+          <div class="kmap" id="kMap"></div>
+          <div class="kinfo" id="kInfo"></div>
         </div>
         <div class="box">
           <h3>付款方式</h3>
@@ -950,6 +965,11 @@ img { display: block; }
       const s = Math.min(1, (innerHeight - 48) / 874, (innerWidth - 48) / 402);
       device.style.transform = `scale(${s})`;
     } else device.style.transform = "";
+    // full-bleed art is drawn at 402pt; scale it to this phone (iPhone 13/16 are narrower, Plus/Pro Max wider)
+    const w = device.offsetWidth, h = device.offsetHeight, sb = parseFloat(getComputedStyle(device).getPropertyValue("--sb"));
+    device.style.setProperty("--k", w / 402);
+    device.style.setProperty("--kc", Math.max(1, w / 402));
+    device.style.setProperty("--ks", Math.min(w / 402, h / (874 - 62 + sb)));
   }
   addEventListener("resize", fit); fit();
 
@@ -1199,6 +1219,55 @@ img { display: block; }
   });
   $("plan").addEventListener("click", e => { if (!typeMenu.hidden && !e.target.closest("#typeMenu, #typePill")) toggleTypeMenu(false); });
 
+  // ---- SIM pickup: WifiMi Kiosks around a fixed visitor position (Nangang Exhibition Center), nearest first ----
+  // x/y are positions on the 338×180 schematic map; the Taoyuan airport kiosks sit off-map behind the edge chip.
+  const KIOSKS = [
+    { name: "捷運南港展覽館站", km: 0.3, min: 4, x: 290, y: 116 },
+    { name: "捷運南港站", km: 1.4, min: 18, x: 246, y: 124 },
+    { name: "松山機場", km: 6.0, min: 15, x: 150, y: 52 },
+    { name: "捷運市政府站", km: 6.5, min: 15, x: 196, y: 124 },
+    { name: "捷運台北101/世貿站", km: 7.0, min: 20, x: 184, y: 160 },
+    { name: "台北車站", km: 11, min: 22, x: 58, y: 124 },
+    { name: "桃園機場第一航廈", km: 50, min: 60, edge: true },
+    { name: "桃園機場第二航廈", km: 51, min: 62, edge: true },
+  ];
+  const ME = { x: 320, y: 98 };
+  const EDGE = { x: 6, y: 138 };
+  $("coPick").innerHTML = KIOSKS.map((k, i) => `<option value="${i}">${k.name}</option>`).join("");
+  const kTime = (k) => k.km <= 2 ? `步行約 ${k.min} 分鐘` : k.edge ? `搭捷運＋機捷約 ${k.min} 分鐘` : `搭捷運約 ${k.min} 分鐘`;
+  const kName = () => KIOSKS[$("coPick").value].name;
+  const PIN = "M0,0 C-2,-5 -8,-9 -8,-15 a8,8 0 1 1 16,0 C8,-9 2,-5 0,0Z";
+  function renderKiosk() {
+    const cur = +$("coPick").value, k = KIOSKS[cur];
+    const roads = (w, ds) => ds.map(d => `<path d="${d}" stroke="#fff" stroke-width="${w}" fill="none" stroke-linecap="round"/>`).join("");
+    let s = `<svg viewBox="0 0 338 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <path d="M-10,30 C60,8 110,42 170,28 S270,6 350,24" stroke="#D6E3F5" stroke-width="12" fill="none"/>
+      <rect x="96" y="134" width="56" height="30" rx="6" fill="#E2F1DA"/><rect x="250" y="146" width="70" height="40" rx="8" fill="#E2F1DA"/>
+      ${roads(4, ["M-10,152 H230", "M40,40 V190", "M226,60 V190", "M300,40 V190", "M-10,56 H130"])}
+      ${roads(8, ["M-10,124 H350", "M-10,86 H350", "M110,40 V190", "M176,40 V190", "M262,60 L320,190"])}
+      <path d="M0,124 H246 L290,116 L330,104" stroke="#BAB9E0" stroke-width="3" fill="none" stroke-linejoin="round"/>`;
+    const to = k.edge ? { x: EDGE.x + 76, y: EDGE.y + 10 } : { x: k.x, y: k.y - 4 };
+    const cx = (ME.x + to.x) / 2, cy = Math.min(ME.y, to.y) - 24;
+    s += `<path d="M${ME.x},${ME.y} Q${cx},${cy} ${to.x},${to.y}" stroke="var(--purple-400)" stroke-width="2.5" stroke-dasharray="5 4" fill="none" stroke-linecap="round"/>`;
+    KIOSKS.forEach((p, i) => { if (p.edge || i === cur) return;
+      s += `<g data-k="${i}" transform="translate(${p.x},${p.y}) scale(.8)"><circle cy="-12" r="16" fill="transparent"/><path d="${PIN}" fill="#A9A9B8"/><circle cy="-15" r="3" fill="#fff"/></g>`; });
+    const edgeTxt = k.edge ? k.name : "桃園機場", ew = edgeTxt.length * 11 + 26;
+    s += `<g data-k="${k.edge ? cur : 6}"><rect x="${EDGE.x}" y="${EDGE.y}" width="${ew}" height="22" rx="11" fill="${k.edge ? "var(--purple-500)" : "#fff"}"/>
+      <text x="${EDGE.x + 10}" y="${EDGE.y + 15.5}" font-size="11" font-weight="600" fill="${k.edge ? "#fff" : "var(--gray-700)"}">‹ ${edgeTxt}</text></g>`;
+    s += `<circle cx="${ME.x}" cy="${ME.y}" r="11" fill="#2F80ED" opacity=".18"/><circle cx="${ME.x}" cy="${ME.y}" r="6" fill="#2F80ED" stroke="#fff" stroke-width="2.5"/>`;
+    if (!k.edge) {
+      const w = k.name.length * 11 + 16, lx = Math.max(4, Math.min(334 - w, k.x - w / 2)), ly = k.y - 50;
+      s += `<g><path d="${PIN}" transform="translate(${k.x},${k.y}) scale(1.15)" fill="var(--purple-500)"/><circle cx="${k.x}" cy="${k.y - 17}" r="3.5" fill="#fff"/>
+        <rect x="${lx}" y="${ly}" width="${w}" height="20" rx="6" fill="#fff" style="filter:drop-shadow(0 1px 2px rgba(46,46,77,.18))"/>
+        <text x="${lx + w / 2}" y="${ly + 14}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--purple-800)">${k.name}</text></g>`;
+    }
+    s += `</svg><span class="note"><span style="color:#2F80ED">●</span> 你在南港展覽館・示意地圖</span>`;
+    $("kMap").innerHTML = s;
+    $("kInfo").innerHTML = `${cur === 0 ? '<span class="ptag best">離你最近</span>' : ""}<b>距離 ${k.km} km</b><span>・${kTime(k)}</span>`;
+  }
+  $("coPick").addEventListener("change", renderKiosk);
+  $("kMap").addEventListener("click", e => { const g = e.target.closest("[data-k]"); if (!g) return; $("coPick").value = g.dataset.k; renderKiosk(); });
+
   // ---- checkout ----
   const sepHtml = `<span class="sp"><img src="assets/sep.svg" alt=""></span>`;
   function renderQty() {
@@ -1210,6 +1279,7 @@ img { display: block; }
     $("coTitle").innerHTML = ["日本", `${sel.days} 天`, volName(p), typeName()].map(t => `<span>${t}</span>`).join(sepHtml);
     $("coFeats").innerHTML = feats(sel.type, true);
     $("pickupBox").hidden = sel.type !== "sim";
+    $("coPick").selectedIndex = 0; renderKiosk();
     sel.qty = 1; renderQty();
     $("coScroll").scrollTop = 0;
     push("checkout");
@@ -1227,11 +1297,12 @@ img { display: block; }
   // ---- success ----
   function showSuccess() {
     const p = curPlan(), esim = sel.type === "esim";
-    $("doneMsg").textContent = esim ? "現在即可前往安裝您的eSIM" : `請前往${$("coPick").value}領取您的SIM卡`;
+    $("doneMsg").innerHTML = esim ? "現在即可前往安裝您的eSIM" : `請至${kName()} WifiMi Kiosk<br>領取您的SIM卡`;
     const rule = isGB(p) ? `總量 ${p.name}，用完即停止` : p.id === "unl" ? "不限流量，不降速" : "無限流量，須遵守 FUP";
     $("doneKv").innerHTML = [
       ["商品名稱", ["日本", `${sel.days} 天`, volName(p), typeName()].join("｜")], ["使用天數", `${sel.days} 天`],
       ["流量規則", rule], ["網路覆蓋", "日本"], ["電信商", "KDDI (5G)"],
+      ...(esim ? [] : [["取貨地點", `WifiMi Kiosk・${kName()}（${KIOSKS[$("coPick").value].km} km）`]]),
     ].map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join("");
     $("doneBtn").textContent = esim ? "前往安裝" : "回首頁";
     const big = document.querySelector("#success .big"); big.classList.remove("pop"); void big.offsetWidth; big.classList.add("pop");
@@ -1308,7 +1379,7 @@ img { display: block; }
     $("hotActivate").hidden = step !== "activate";
     $("hotComplete").hidden = step !== "complete";
     $("hotCellular").hidden = step !== "cellular";
-    sheet.style.background = step === "cellular" ? "#F2F2F7" : "#fff";
+    sheet.dataset.step = step;
     sheet.hidden = false; sheet.classList.remove("up", "push"); void sheet.offsetWidth;
     if (anim) sheet.classList.add(anim);
   }
